@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
@@ -13,19 +14,19 @@ export class UsersService {
   ) {}
 
   register(createUserDto: CreateUserDto) {
-    this.usersRepository.save(createUserDto);
+    return this.usersRepository.save(createUserDto);
   }
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  findAll(name: string) {
+    return this.usersRepository.find({ name: Like(`%${name}%`) });
   }
 
-  findAll() {
-    return `This action returns all users`;
+  findOneById(id: string) {
+    return this.usersRepository.findOne(id);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  findByLogin(loginUserDto: LoginUserDto) {
+    return this.usersRepository.findOne(loginUserDto);
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
