@@ -41,8 +41,29 @@ export class UsersService {
     return this.usersRepository.findOne(loginUserDto);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async updateAccount(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<[HttpStatus, CreateUserDto & User]> {
+    const isPasswordMatch = await this.usersRepository.findOne({
+      password: updateUserDto.password,
+    });
+
+    if (!isPasswordMatch) {
+      return [HttpStatus.FORBIDDEN, null];
+    }
+
+    const user = await this.usersRepository.findOne({
+      id,
+    });
+
+    if (!user) {
+      return [HttpStatus.NOT_FOUND, null];
+    }
+
+    const { password, ...rest } = updateUserDto;
+
+    return [null, await this.usersRepository.save({ ...user, ...rest })];
   }
 
   remove(id: number) {

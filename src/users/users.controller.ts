@@ -21,6 +21,7 @@ import { Query } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RequestWithUser } from 'src/interfaces/request-with-user.interface';
 
 @Controller('users')
 export class UsersController {
@@ -40,7 +41,7 @@ export class UsersController {
       });
     }
 
-    return response(res, HttpStatus.OK, {
+    return response(res, HttpStatus.CREATED, {
       message: 'Succesfully register new account',
       data: newUser,
     });
@@ -75,9 +76,42 @@ export class UsersController {
     return this.usersService.findOneById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @UseGuards(JwtAuthGuard)
+  @Patch()
+  async update(
+    @Req() req: RequestWithUser,
+    @Res() res: Response,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    if (!updateUserDto.password) {
+      return response(res, HttpStatus.BAD_REQUEST, {
+        message: 'Password is required!',
+      });
+    }
+
+    const [error, newUser] = await this.usersService.updateAccount(
+      req.user.id,
+      updateUserDto,
+    );
+
+    if (error === HttpStatus.FORBIDDEN) {
+      return response(res, error, {
+        message: 'Password is incorrect!',
+        data: newUser,
+      });
+    }
+
+    if (error === HttpStatus.NOT_FOUND) {
+      return response(res, error, {
+        message: "Sorry, We can't find your account!",
+        data: newUser,
+      });
+    }
+
+    return response(res, HttpStatus.OK, {
+      message: 'Succesfully register new account',
+      data: newUser,
+    });
   }
 
   @Delete(':id')
