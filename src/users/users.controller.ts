@@ -10,12 +10,13 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  HttpException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Response, Request } from 'express';
-import { success } from '../utils/response';
+import { response } from '../utils/response';
 import { Query } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -29,12 +30,19 @@ export class UsersController {
   ) {}
 
   @Post('register')
-  register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    this.usersService.register(createUserDto);
+  async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+    const [error, newUser] = await this.usersService.register(createUserDto);
 
-    return success(res, HttpStatus.OK, {
+    if (error) {
+      return response(res, error, {
+        message: 'Email is already register!',
+        data: newUser,
+      });
+    }
+
+    return response(res, HttpStatus.OK, {
       message: 'Succesfully register new account',
-      data: createUserDto,
+      data: newUser,
     });
   }
 
@@ -42,7 +50,7 @@ export class UsersController {
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
     const token = await this.authService.login(loginUserDto);
 
-    return success(res, HttpStatus.OK, {
+    return response(res, HttpStatus.OK, {
       message: 'Successfully Login',
       data: token,
     });
@@ -51,7 +59,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('account')
   async account(@Req() req: Request, @Res() res: Response) {
-    return success(res, HttpStatus.OK, {
+    return response(res, HttpStatus.OK, {
       message: 'Successfully data account',
       data: req.user,
     });
@@ -59,7 +67,7 @@ export class UsersController {
 
   @Get()
   search(@Query('name') name: string) {
-    return this.usersService.findAll(name);
+    return this.usersService.findByName(name);
   }
 
   @Get(':id')

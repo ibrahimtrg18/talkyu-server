@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,16 +13,28 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  register(createUserDto: CreateUserDto) {
-    return this.usersRepository.save(createUserDto);
+  async register(
+    createUserDto: CreateUserDto,
+  ): Promise<[HttpStatus, CreateUserDto & User]> {
+    const isEmailExist = await this.findOneByEmail(createUserDto.email);
+
+    if (isEmailExist) {
+      return [HttpStatus.CONFLICT, null];
+    }
+
+    return [null, await this.usersRepository.save(createUserDto)];
   }
 
-  findAll(name: string) {
+  findByName(name: string) {
     return this.usersRepository.find({ name: Like(`%${name}%`) });
   }
 
   findOneById(id: string) {
     return this.usersRepository.findOne(id);
+  }
+
+  findOneByEmail(email: string) {
+    return this.usersRepository.findOne({ email });
   }
 
   findByLogin(loginUserDto: LoginUserDto) {

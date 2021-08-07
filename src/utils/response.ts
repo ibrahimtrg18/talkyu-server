@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 
-export const success = (
+export const response = (
   res: Response,
   status: HttpStatus | number,
   { message = '', data = {} },
