@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
+import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
@@ -25,6 +25,22 @@ export class UsersService {
     return [null, await this.usersRepository.save(createUserDto)];
   }
 
+  async registerGoogle({
+    email,
+    name,
+  }): Promise<[HttpStatus, CreateUserDto & User]> {
+    const isEmailExist = await this.findOneByEmail(email);
+
+    if (isEmailExist) {
+      return [HttpStatus.CONFLICT, null];
+    }
+
+    return [
+      null,
+      await this.usersRepository.save({ email, name, password: '' }),
+    ];
+  }
+
   findByName(name: string) {
     return this.usersRepository.find({ name: Like(`%${name}%`) });
   }
@@ -37,7 +53,7 @@ export class UsersService {
     return this.usersRepository.findOne({ email });
   }
 
-  findByLogin(loginUserDto: LoginUserDto) {
+  findByLogin(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
     return this.usersRepository.findOne(loginUserDto);
   }
 

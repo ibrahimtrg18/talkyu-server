@@ -22,6 +22,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RequestWithUser } from 'src/interfaces/request-with-user.interface';
+import { OAuth2Client } from 'google-auth-library';
 
 @Controller('users')
 export class UsersController {
@@ -64,6 +65,74 @@ export class UsersController {
       message: 'Successfully data account',
       data: req.user,
     });
+  }
+
+  @Post('google/register')
+  async registerGoogle(@Req() req: Request, @Res() res: Response) {
+    try {
+      const client = new OAuth2Client({
+        clientId:
+          '39515346365-ffck4nfekkjo1uv5trfefc08taqjorq7.apps.googleusercontent.com',
+        clientSecret: '4ppH-HYbJY0ag8u_Sn7dypeh',
+      });
+      const ticket = await client.verifyIdToken({
+        idToken: req.headers['token'] as string,
+        audience:
+          '39515346365-ffck4nfekkjo1uv5trfefc08taqjorq7.apps.googleusercontent.com',
+      });
+      const payload = ticket.getPayload();
+
+      const [error, newUser] = await this.usersService.registerGoogle({
+        email: payload.email,
+        name: payload.name,
+      });
+
+      if (error) {
+        return response(res, error, {
+          message: 'Email is already register!',
+          data: newUser,
+        });
+      }
+
+      return response(res, HttpStatus.CREATED, {
+        message: 'Succesfully register new account',
+        data: newUser,
+      });
+    } catch (err) {
+      return response(res, HttpStatus.UNAUTHORIZED, {
+        message: 'Invalid Token',
+        data: null,
+      });
+    }
+  }
+
+  @Post('google/login')
+  async loginGoogle(@Req() req: Request, @Res() res: Response) {
+    try {
+      const client = new OAuth2Client({
+        clientId:
+          '39515346365-ffck4nfekkjo1uv5trfefc08taqjorq7.apps.googleusercontent.com',
+        clientSecret: '4ppH-HYbJY0ag8u_Sn7dypeh',
+      });
+      const ticket = await client.verifyIdToken({
+        idToken: req.headers['token'] as string,
+        audience:
+          '39515346365-ffck4nfekkjo1uv5trfefc08taqjorq7.apps.googleusercontent.com',
+      });
+      const payload = ticket.getPayload();
+
+      const token = await this.authService.login({ email: payload.email });
+
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully Login',
+        data: token,
+      });
+    } catch (err) {
+      return response(res, HttpStatus.UNAUTHORIZED, {
+        message: 'Invalid Token',
+        data: null,
+      });
+    }
   }
 
   @Get()

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUserDto } from 'src/users/dto/login-user.dto';
+import { LoginGoogleUserDto, LoginUserDto } from 'src/users/dto/login-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { Payload } from '../interfaces/payload.interface';
 
@@ -20,11 +20,14 @@ export class AuthService {
     return null;
   }
 
-  async login(loginUserDto: LoginUserDto) {
+  async login(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
     const user = await this.usersService.findByLogin(loginUserDto);
 
     if (!user) {
-      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'Email and Password incorrect!',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const payload = { userId: user.id, email: user.email };
