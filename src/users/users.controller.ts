@@ -85,6 +85,7 @@ export class UsersController {
       const [error, newUser] = await this.usersService.registerGoogle({
         email: payload.email,
         name: payload.name,
+        googleOpenId: payload.sub,
       });
 
       if (error) {
