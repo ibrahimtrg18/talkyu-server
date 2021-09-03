@@ -1,32 +1,27 @@
 import { Conversation } from 'src/conversation/entities/conversation.entity';
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class Chat {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  name: string;
+  message: string;
 
-  @Column()
-  email: string;
+  @ManyToOne(() => User, (user) => user.conversations)
+  user: User;
 
-  @Column()
-  password: string;
-
-  @Column()
-  googleOpenId: string;
-
-  @OneToMany(() => User, (user) => user.conversations)
-  conversations: Conversation[];
+  @ManyToOne(() => Conversation, (conversation) => conversation.chats)
+  conversation: Conversation;
 
   @CreateDateColumn({
     type: 'timestamp',

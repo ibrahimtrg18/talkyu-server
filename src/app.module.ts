@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ChatGateway } from './chat.gateway';
+import { ConversationModule } from './conversation/conversation.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { ChatGateway } from './chat.gateway';
     TypeOrmModule.forRoot(),
     UsersModule,
     AuthModule,
+    ConversationModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
