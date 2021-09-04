@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ChatGateway } from './chat.gateway';
 import { ConversationModule } from './conversation/conversation.module';
 import { ChatModule } from './chat/chat.module';
+import { FriendModule } from './friend/friend.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ChatModule } from './chat/chat.module';
     AuthModule,
     ConversationModule,
     ChatModule,
+    FriendModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
