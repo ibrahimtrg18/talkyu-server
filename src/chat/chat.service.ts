@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Repository } from 'typeorm';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
@@ -10,10 +11,15 @@ export class ChatService {
   constructor(
     @InjectRepository(Chat)
     private chatRepository: Repository<Chat>,
+    @InjectRepository(Conversation)
+    private conversationRepository: Repository<Conversation>,
   ) {}
 
   create(createChatDto: CreateChatDto) {
-    return this.chatRepository.save(createChatDto);
+    const conversation = this.conversationRepository.findOne(
+      createChatDto.conversation.id,
+    );
+    return this.chatRepository.save({ ...createChatDto, ...conversation });
   }
 
   findAll() {
