@@ -1,11 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm/repository/Repository';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
+import { Conversation } from './entities/conversation.entity';
 
 @Injectable()
 export class ConversationService {
-  create(createConversationDto: CreateConversationDto) {
-    return 'This action adds a new conversation';
+  constructor(
+    @InjectRepository(Conversation)
+    private conversationRepository: Repository<Conversation>,
+  ) {}
+
+  async create(createConversationDto: CreateConversationDto) {
+    return await this.conversationRepository.save(createConversationDto);
+  }
+
+  async findById(id: string) {
+    return await this.conversationRepository.findOne(id);
+  }
+
+  async getChatsById(id: string) {
+    const chats = await this.conversationRepository.find({
+      relations: ['chats'],
+    });
+
+    return chats;
   }
 
   findAll() {

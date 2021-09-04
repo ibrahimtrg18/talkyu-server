@@ -1,9 +1,8 @@
 import { Chat } from 'src/chat/entities/chat.entity';
 import {
-  Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,7 +12,7 @@ export class Conversation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Chat, (chat) => chat.conversation)
+  @OneToMany(() => Chat, (chat) => chat.conversation)
   chats: Chat[];
 
   @CreateDateColumn({
