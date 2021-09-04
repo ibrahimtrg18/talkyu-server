@@ -22,6 +22,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RequestWithUser } from 'src/interfaces/request-with-user.interface';
 import { OAuth2Client } from 'google-auth-library';
+import { SearchUserDto } from './dto/search-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -135,9 +136,9 @@ export class UsersController {
     }
   }
 
-  @Get()
-  search(@Query('name') name: string) {
-    return this.usersService.findByName(name);
+  @Get('search')
+  search(@Query() searchUserDto: SearchUserDto) {
+    return this.usersService.findByQuery(searchUserDto);
   }
 
   @Get(':id')

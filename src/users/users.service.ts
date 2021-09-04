@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
@@ -47,8 +48,8 @@ export class UsersService {
     ];
   }
 
-  findByName(name: string) {
-    return this.usersRepository.find({ name: Like(`%${name}%`) });
+  findByQuery(searchUserDto: SearchUserDto) {
+    return this.usersRepository.find(searchUserDto);
   }
 
   findOneById(id: string) {
