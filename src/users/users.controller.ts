@@ -58,15 +58,6 @@ export class UsersController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('account')
-  async account(@Req() req: Request, @Res() res: Response) {
-    return response(res, HttpStatus.OK, {
-      message: 'Successfully data account',
-      data: req.user,
-    });
-  }
-
   @Post('google/register')
   async registerGoogle(@Req() req: Request, @Res() res: Response) {
     try {
@@ -136,16 +127,6 @@ export class UsersController {
     }
   }
 
-  @Get('search')
-  search(@Query() searchUserDto: SearchUserDto) {
-    return this.usersService.findByQuery(searchUserDto);
-  }
-
-  @Get(':id')
-  findOneById(@Param('id') id: string) {
-    return this.usersService.findOneById(id);
-  }
-
   @UseGuards(JwtAuthGuard)
   @Patch()
   async update(
@@ -182,6 +163,36 @@ export class UsersController {
       message: 'Succesfully register new account',
       data: newUser,
     });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('account')
+  async account(@Req() req: Request, @Res() res: Response) {
+    return response(res, HttpStatus.OK, {
+      message: 'Successfully data account',
+      data: req.user,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('friend')
+  async friend(@Req() req: RequestWithUser, @Res() res: Response) {
+    const friends = await this.usersService.getFriends(req.user.id);
+
+    return response(res, HttpStatus.OK, {
+      message: `You have ${friends.length} friends`,
+      data: friends,
+    });
+  }
+
+  @Get('search')
+  search(@Query() searchUserDto: SearchUserDto) {
+    return this.usersService.findByQuery(searchUserDto);
+  }
+
+  @Get(':id')
+  findOneById(@Param('id') id: string) {
+    return this.usersService.findOneById(id);
   }
 
   @Delete(':id')

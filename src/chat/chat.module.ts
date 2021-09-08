@@ -7,9 +7,13 @@ import { Chat } from './entities/chat.entity';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
+import { Friend } from 'src/friend/entities/friend.entity';
 
 @Module({
-  imports: [AuthModule, TypeOrmModule.forFeature([Chat, User, Conversation])],
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([Chat, User, Conversation, Friend]),
+  ],
   providers: [ChatGateway, ChatService, UsersService, Conversation],
 })
 export class ChatModule {}

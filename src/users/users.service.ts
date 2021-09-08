@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Friend } from 'src/friend/entities/friend.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
@@ -12,6 +13,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Friend)
+    private friendRepository: Repository<Friend>,
   ) {}
 
   async register(
@@ -87,6 +90,13 @@ export class UsersService {
     const { password, ...rest } = updateUserDto;
 
     return [null, await this.usersRepository.save({ ...user, ...rest })];
+  }
+
+  async getFriends(id: string) {
+    return await this.friendRepository.find({
+      relations: ['user'],
+      where: { user: { id } },
+    });
   }
 
   remove(id: number) {
