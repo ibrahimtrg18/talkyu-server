@@ -1,4 +1,5 @@
 import { Conversation } from 'src/conversation/entities/conversation.entity';
+import { Friend } from 'src/friend/entities/friend.entity';
 import {
   Column,
   CreateDateColumn,
@@ -24,6 +25,9 @@ export class User {
 
   @Column()
   googleOpenId: string;
+
+  @OneToMany(() => User, (user) => user.friends)
+  friends: Friend[];
 
   @OneToMany(() => User, (user) => user.conversations)
   conversations: Conversation[];
