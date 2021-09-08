@@ -6,5 +6,5 @@ export class CreateFriendDto {
 
   @IsDefined()
   @IsNotEmpty()
-  friendTo: User;
+  friend: User;
 }
