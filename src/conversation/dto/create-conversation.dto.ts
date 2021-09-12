@@ -1,8 +1,9 @@
 import { ConversationType } from '../interfaces/ConversationType';
-import { IsDefined, IsNotEmpty } from 'class-validator';
+import { IsDefined, IsEnum, IsNotEmpty } from 'class-validator';
 
 export class CreateConversationDto {
   @IsDefined()
   @IsNotEmpty()
+  @IsEnum(ConversationType)
   type: ConversationType;
 }
