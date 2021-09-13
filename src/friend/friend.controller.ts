@@ -17,8 +17,9 @@ import { FriendService } from './friend.service';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { UpdateFriendDto } from './dto/update-friend.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RequestWithUser } from 'src/interfaces/request-with-user.interface';
 import { response } from 'src/utils/response';
+import { User } from 'src/decorators/user.decorator';
+import { Payload } from 'src/interfaces/payload.interface';
 
 @Controller('friend')
 export class FriendController {
@@ -27,12 +28,12 @@ export class FriendController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(
-    @Req() req: RequestWithUser,
     @Res() res: Response,
     @Body() createFriendDto: CreateFriendDto,
+    @User() user: Payload,
   ) {
     const [err, newFriend, message] = await this.friendService.create({
-      user: req.user,
+      user: user,
       ...createFriendDto,
     });
 

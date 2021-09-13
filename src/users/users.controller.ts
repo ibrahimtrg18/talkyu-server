@@ -20,9 +20,10 @@ import { Query } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RequestWithUser } from 'src/interfaces/request-with-user.interface';
 import { OAuth2Client } from 'google-auth-library';
 import { SearchUserDto } from './dto/search-user.dto';
+import { Payload } from 'src/interfaces/payload.interface';
+import { User } from 'src/decorators/user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -130,9 +131,9 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Patch()
   async update(
-    @Req() req: RequestWithUser,
     @Res() res: Response,
     @Body() updateUserDto: UpdateUserDto,
+    @User() user: Payload,
   ) {
     if (!updateUserDto.password) {
       return response(res, HttpStatus.BAD_REQUEST, {
@@ -141,7 +142,7 @@ export class UsersController {
     }
 
     const [error, newUser] = await this.usersService.updateAccount(
-      req.user.id,
+      user.id,
       updateUserDto,
     );
 
@@ -176,8 +177,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('friend')
-  async friend(@Req() req: RequestWithUser, @Res() res: Response) {
-    const friends = await this.usersService.getFriends(req.user.id);
+  async friend(@Res() res: Response, @User() user: Payload) {
+    const friends = await this.usersService.getFriends(user.id);
 
     return response(res, HttpStatus.OK, {
       message: `You have ${friends.length} friends`,
