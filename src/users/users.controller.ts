@@ -114,12 +114,27 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      const token = await this.authService.login({ email: payload.email });
-
-      return response(res, HttpStatus.OK, {
-        message: 'Successfully Login',
-        data: token,
+      const [error, newUser] = await this.usersService.registerGoogle({
+        email: payload.email,
+        name: payload.name,
+        googleOpenId: payload.sub,
       });
+
+      if (error) {
+        const token = await this.authService.login({ email: payload.email });
+
+        return response(res, HttpStatus.OK, {
+          message: 'Successfully Login',
+          data: token,
+        });
+      } else {
+        const token = await this.authService.login({ email: newUser.email });
+
+        return response(res, HttpStatus.OK, {
+          message: 'Successfully Login',
+          data: token,
+        });
+      }
     } catch (err) {
       return response(res, HttpStatus.UNAUTHORIZED, {
         message: 'Invalid Token',
