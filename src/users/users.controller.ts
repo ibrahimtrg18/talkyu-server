@@ -49,6 +49,7 @@ export class UsersController {
         data: newUser,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -66,6 +67,7 @@ export class UsersController {
         data: token,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -106,6 +108,7 @@ export class UsersController {
         data: newUser,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -150,6 +153,7 @@ export class UsersController {
         });
       }
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -195,6 +199,7 @@ export class UsersController {
         data: newUser,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -211,6 +216,7 @@ export class UsersController {
         data: req.user,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -229,6 +235,7 @@ export class UsersController {
         data: friends,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -247,6 +254,7 @@ export class UsersController {
         data: conversations,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -261,6 +269,7 @@ export class UsersController {
 
       return response(res, HttpStatus.OK, { data: results });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,
@@ -273,6 +282,7 @@ export class UsersController {
     try {
       return this.usersService.findOneById(id);
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,

@@ -43,6 +43,7 @@ export class FriendController {
         data: newFriend,
       });
     } catch (e) {
+      console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
         message: e,
         data: null,

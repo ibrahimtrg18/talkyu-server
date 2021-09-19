@@ -30,7 +30,7 @@ export class WsGuard implements CanActivate {
         });
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return false;
     }
   }
