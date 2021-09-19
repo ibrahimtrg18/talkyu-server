@@ -32,15 +32,22 @@ export class FriendController {
     @Body() createFriendDto: CreateFriendDto,
     @User() user: Payload,
   ) {
-    const [err, newFriend, message] = await this.friendService.create({
-      user: user,
-      ...createFriendDto,
-    });
+    try {
+      const [err, newFriend, message] = await this.friendService.create({
+        user: user,
+        ...createFriendDto,
+      });
 
-    return response(res, err, {
-      message: message,
-      data: newFriend,
-    });
+      return response(res, err, {
+        message: message,
+        data: newFriend,
+      });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 
   @Get()

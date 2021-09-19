@@ -54,20 +54,20 @@ export class UsersService {
     ];
   }
 
-  findByQuery(searchUserDto: SearchUserDto) {
-    return this.usersRepository.find(searchUserDto);
+  async findByQuery(searchUserDto: SearchUserDto) {
+    return await this.usersRepository.find(searchUserDto);
   }
 
   async findOneById(id: string) {
     return await this.usersRepository.findOne(id);
   }
 
-  findOneByEmail(email: string) {
-    return this.usersRepository.findOne({ email });
+  async findOneByEmail(email: string) {
+    return await this.usersRepository.findOne({ email });
   }
 
-  findByLogin(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
-    return this.usersRepository.findOne(loginUserDto);
+  async findByLogin(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
+    return await this.usersRepository.findOne(loginUserDto);
   }
 
   async updateAccount(
@@ -107,9 +107,5 @@ export class UsersService {
       relations: ['user'],
       where: { user: { id } },
     });
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
   }
 }

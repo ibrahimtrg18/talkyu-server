@@ -34,29 +34,43 @@ export class UsersController {
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    const [error, newUser] = await this.usersService.register(createUserDto);
+    try {
+      const [error, newUser] = await this.usersService.register(createUserDto);
 
-    if (error) {
-      return response(res, error, {
-        message: 'Email is already register!',
+      if (error) {
+        return response(res, error, {
+          message: 'Email is already register!',
+          data: newUser,
+        });
+      }
+
+      return response(res, HttpStatus.CREATED, {
+        message: 'Succesfully register new account',
         data: newUser,
       });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
     }
-
-    return response(res, HttpStatus.CREATED, {
-      message: 'Succesfully register new account',
-      data: newUser,
-    });
   }
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
-    const token = await this.authService.login(loginUserDto);
+    try {
+      const token = await this.authService.login(loginUserDto);
 
-    return response(res, HttpStatus.OK, {
-      message: 'Successfully Login',
-      data: token,
-    });
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully Login',
+        data: token,
+      });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 
   @Post('google/register')
@@ -91,9 +105,9 @@ export class UsersController {
         message: 'Succesfully register new account',
         data: newUser,
       });
-    } catch (err) {
-      return response(res, HttpStatus.UNAUTHORIZED, {
-        message: 'Invalid Token',
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
         data: null,
       });
     }
@@ -135,9 +149,9 @@ export class UsersController {
           data: token,
         });
       }
-    } catch (err) {
-      return response(res, HttpStatus.UNAUTHORIZED, {
-        message: 'Invalid Token',
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
         data: null,
       });
     }
@@ -150,80 +164,119 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
     @User() user: Payload,
   ) {
-    if (!updateUserDto.password) {
-      return response(res, HttpStatus.BAD_REQUEST, {
-        message: 'Password is required!',
-      });
-    }
+    try {
+      if (!updateUserDto.password) {
+        return response(res, HttpStatus.BAD_REQUEST, {
+          message: 'Password is required!',
+        });
+      }
 
-    const [error, newUser] = await this.usersService.updateAccount(
-      user.id,
-      updateUserDto,
-    );
+      const [error, newUser] = await this.usersService.updateAccount(
+        user.id,
+        updateUserDto,
+      );
 
-    if (error === HttpStatus.FORBIDDEN) {
-      return response(res, error, {
-        message: 'Password is incorrect!',
+      if (error === HttpStatus.FORBIDDEN) {
+        return response(res, error, {
+          message: 'Password is incorrect!',
+          data: newUser,
+        });
+      }
+
+      if (error === HttpStatus.NOT_FOUND) {
+        return response(res, error, {
+          message: "Sorry, We can't find your account!",
+          data: newUser,
+        });
+      }
+
+      return response(res, HttpStatus.OK, {
+        message: 'Succesfully register new account',
         data: newUser,
       });
-    }
-
-    if (error === HttpStatus.NOT_FOUND) {
-      return response(res, error, {
-        message: "Sorry, We can't find your account!",
-        data: newUser,
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
       });
     }
-
-    return response(res, HttpStatus.OK, {
-      message: 'Succesfully register new account',
-      data: newUser,
-    });
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('account')
   async account(@Req() req: Request, @Res() res: Response) {
-    return response(res, HttpStatus.OK, {
-      message: 'Successfully data account',
-      data: req.user,
-    });
+    try {
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully data account',
+        data: req.user,
+      });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('friend')
   async friend(@Res() res: Response, @User() user: Payload) {
-    const friends = await this.usersService.getFriends(user.id);
+    try {
+      const friends = await this.usersService.getFriends(user.id);
 
-    return response(res, HttpStatus.OK, {
-      message: `You have ${friends.length} friends`,
-      data: friends,
-    });
+      return response(res, HttpStatus.OK, {
+        message: `You have ${friends.length} friends`,
+        data: friends,
+      });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('conversation')
   async conversations(@Res() res: Response, @User() user: Payload) {
-    const conversations = await this.usersService.getConversations(user.id);
+    try {
+      const conversations = await this.usersService.getConversations(user.id);
 
-    return response(res, HttpStatus.OK, {
-      message: `You have ${conversations.length} conversations`,
-      data: conversations,
-    });
+      return response(res, HttpStatus.OK, {
+        message: `You have ${conversations.length} conversations`,
+        data: conversations,
+      });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 
   @Get('search')
-  search(@Query() searchUserDto: SearchUserDto) {
-    return this.usersService.findByQuery(searchUserDto);
+  async search(@Res() res: Response, @Query() searchUserDto: SearchUserDto) {
+    try {
+      const results = await this.usersService.findByQuery(searchUserDto);
+
+      return response(res, HttpStatus.OK, { data: results });
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 
   @Get(':id')
-  findOneById(@Param('id') id: string) {
-    return this.usersService.findOneById(id);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  findOneById(@Res() res: Response, @Param('id') id: string) {
+    try {
+      return this.usersService.findOneById(id);
+    } catch (e) {
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
   }
 }
