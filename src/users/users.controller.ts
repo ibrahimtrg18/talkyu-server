@@ -201,6 +201,17 @@ export class UsersController {
     });
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('conversation')
+  async conversations(@Res() res: Response, @User() user: Payload) {
+    const conversations = await this.usersService.getConversations(user.id);
+
+    return response(res, HttpStatus.OK, {
+      message: `You have ${conversations.length} conversations`,
+      data: conversations,
+    });
+  }
+
   @Get('search')
   search(@Query() searchUserDto: SearchUserDto) {
     return this.usersService.findByQuery(searchUserDto);

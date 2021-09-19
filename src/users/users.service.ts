@@ -1,7 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Friend } from 'src/friend/entities/friend.entity';
-import { Like, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
@@ -15,6 +16,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(Friend)
     private friendRepository: Repository<Friend>,
+    @InjectRepository(Conversation)
+    private conversationRepository: Repository<Conversation>,
   ) {}
 
   async register(
@@ -94,6 +97,13 @@ export class UsersService {
 
   async getFriends(id: string) {
     return await this.friendRepository.find({
+      relations: ['user'],
+      where: { user: { id } },
+    });
+  }
+
+  async getConversations(id: string) {
+    return await this.conversationRepository.find({
       relations: ['user'],
       where: { user: { id } },
     });

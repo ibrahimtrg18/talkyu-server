@@ -5,11 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { Friend } from 'src/friend/entities/friend.entity';
-import { Chat } from 'src/chat/entities/chat.entity';
+import { Conversation } from 'src/conversation/entities/conversation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Friend]),
+    TypeOrmModule.forFeature([User, Friend, Conversation]),
     forwardRef(() => AuthModule),
   ],
   controllers: [UsersController],
