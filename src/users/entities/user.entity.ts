@@ -23,8 +23,8 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
-  googleOpenId: string;
+  @Column({ nullable: true, default: null })
+  google_open_id: string;
 
   @OneToMany(() => User, (user) => user.friends)
   friends: Friend[];

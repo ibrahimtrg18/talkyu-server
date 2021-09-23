@@ -93,7 +93,7 @@ export class UsersController {
       const [error, newUser] = await this.usersService.registerGoogle({
         email: payload.email,
         name: payload.name,
-        googleOpenId: payload.sub,
+        google_open_id: payload.sub,
       });
 
       if (error) {
@@ -134,7 +134,7 @@ export class UsersController {
       const [error, newUser] = await this.usersService.registerGoogle({
         email: payload.email,
         name: payload.name,
-        googleOpenId: payload.sub,
+        google_open_id: payload.sub,
       });
 
       if (error) {

@@ -35,7 +35,7 @@ export class UsersService {
   async registerGoogle({
     email,
     name,
-    googleOpenId,
+    google_open_id,
   }): Promise<[HttpStatus, CreateUserDto & User]> {
     const isEmailExist = await this.findOneByEmail(email);
 
@@ -49,7 +49,7 @@ export class UsersService {
         email,
         name,
         password: '',
-        googleOpenId,
+        google_open_id,
       }),
     ];
   }
