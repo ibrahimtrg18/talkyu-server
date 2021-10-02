@@ -4,6 +4,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -22,8 +24,9 @@ export class Conversation {
   @OneToMany(() => Chat, (chat) => chat.conversation)
   chats: Chat[];
 
-  @ManyToOne(() => User, (user) => user.conversations)
-  user: User;
+  @ManyToMany(() => User)
+  @JoinTable()
+  users: User[];
 
   @CreateDateColumn({
     type: 'timestamp',
