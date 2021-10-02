@@ -24,7 +24,7 @@ export class Conversation {
   @OneToMany(() => Chat, (chat) => chat.conversation)
   chats: Chat[];
 
-  @ManyToMany(() => User)
+  @ManyToMany(() => User, (user) => user.conversations)
   @JoinTable()
   users: User[];
 

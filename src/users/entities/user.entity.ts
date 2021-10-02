@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -29,7 +30,7 @@ export class User {
   @OneToMany(() => User, (user) => user.friends)
   friends: Friend[];
 
-  @OneToMany(() => User, (user) => user.conversations)
+  @ManyToMany(() => User, (user) => user.conversations)
   conversations: Conversation[];
 
   @CreateDateColumn({
