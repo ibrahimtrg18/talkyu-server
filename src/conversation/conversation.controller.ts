@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { Response } from 'passport-strategy/node_modules/@types/express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { User } from 'src/decorators/user.decorator';
+import { Payload } from 'src/interfaces/payload.interface';
 import { response } from 'src/utils/response';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -23,10 +25,12 @@ export class ConversationController {
   async createConversation(
     @Res() res: Response,
     @Body() createConversationDto: CreateConversationDto,
+    @User() user: any,
   ) {
-    const [error, conversation] = await this.conversationService.create(
-      createConversationDto,
-    );
+    const [error, conversation] = await this.conversationService.create({
+      ...createConversationDto,
+      users: [...createConversationDto.users, user],
+    });
 
     if (error) {
       return response(res, error, {
@@ -43,8 +47,20 @@ export class ConversationController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findById(@Param('id') id: string) {
-    return this.conversationService.findById(id);
+  async findById(@Res() res: Response, @Param('id') id: string) {
+    const [error, conversation] = await this.conversationService.findById(id);
+
+    if (error) {
+      return response(res, error, {
+        message: 'Please, check user again!',
+        data: conversation,
+      });
+    }
+
+    return response(res, HttpStatus.OK, {
+      message: 'Successfully create conversation!',
+      data: conversation,
+    });
   }
 
   @UseGuards(JwtAuthGuard)

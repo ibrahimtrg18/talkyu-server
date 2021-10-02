@@ -103,9 +103,10 @@ export class UsersService {
   }
 
   async getConversations(id: string) {
-    return await this.conversationRepository.find({
-      relations: ['user'],
-      where: { user: { id } },
-    });
+    return await this.conversationRepository
+      .createQueryBuilder('conversation')
+      .leftJoinAndSelect('conversation.users', 'user')
+      .where('user.id = :id', { id })
+      .getMany();
   }
 }

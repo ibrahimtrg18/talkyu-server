@@ -44,8 +44,20 @@ export class ConversationService {
     }
   }
 
-  async findById(id: string) {
-    return await this.conversationRepository.findOne(id);
+  async findById(id: string): Promise<[HttpStatus, Conversation]> {
+    const isExist = await this.conversationRepository.findOne(id);
+
+    if (!isExist) {
+      return [HttpStatus.NOT_FOUND, null];
+    }
+
+    return [
+      null,
+      await this.conversationRepository.findOne({
+        relations: ['users'],
+        where: { id },
+      }),
+    ];
   }
 
   async getChatsById(id: string) {
