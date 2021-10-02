@@ -1,6 +1,21 @@
 import { ConversationType } from '../interfaces/ConversationType';
-import { IsArray, IsDefined, IsEnum, IsNotEmpty } from 'class-validator';
-import { User } from 'src/users/entities/user.entity';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsDefined,
+  IsEnum,
+  IsNotEmpty,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class UserDto {
+  @IsDefined()
+  @IsNotEmpty()
+  @IsUUID()
+  id: string;
+}
 
 export class CreateConversationDto {
   @IsDefined()
@@ -8,8 +23,9 @@ export class CreateConversationDto {
   @IsEnum(ConversationType)
   type: ConversationType;
 
-  @IsDefined()
-  @IsNotEmpty()
   @IsArray()
-  users: Array<User>;
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => UserDto)
+  users: UserDto[];
 }
