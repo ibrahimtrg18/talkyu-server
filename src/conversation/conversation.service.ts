@@ -61,9 +61,12 @@ export class ConversationService {
   }
 
   async getChatsById(id: string) {
-    const chats = await this.conversationRepository.find({
-      relations: ['chats'],
-    });
+    const chats = await this.conversationRepository
+      .createQueryBuilder('conversation')
+      .leftJoinAndSelect('conversation.chats', 'chat')
+      .where('conversation.id = :id', { id })
+      .orderBy('chat.created_at', 'ASC')
+      .getMany();
 
     return chats;
   }
