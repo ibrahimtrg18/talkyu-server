@@ -120,14 +120,12 @@ export class UsersController {
   async loginGoogle(@Req() req: Request, @Res() res: Response) {
     try {
       const client = new OAuth2Client({
-        clientId:
-          '39515346365-ffck4nfekkjo1uv5trfefc08taqjorq7.apps.googleusercontent.com',
-        clientSecret: '4ppH-HYbJY0ag8u_Sn7dypeh',
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       });
       const ticket = await client.verifyIdToken({
         idToken: req.headers['token'] as string,
-        audience:
-          '39515346365-ffck4nfekkjo1uv5trfefc08taqjorq7.apps.googleusercontent.com',
+        audience: process.env.GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
 
