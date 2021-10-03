@@ -2,12 +2,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Friend } from 'src/friend/entities/friend.entity';
-import { Repository } from 'typeorm';
+import { isEmail } from 'src/utils/validation';
+import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { validate } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -55,7 +57,21 @@ export class UsersService {
   }
 
   async findByQuery(searchUserDto: SearchUserDto) {
-    return await this.usersRepository.find(searchUserDto);
+    const { q } = searchUserDto;
+
+    if (validate(q)) {
+      return await this.usersRepository.find({
+        id: q,
+      });
+    } else if (isEmail(q)) {
+      return await this.usersRepository.find({
+        email: q,
+      });
+    } else {
+      return await this.usersRepository.find({
+        name: Like(`%${q}%`),
+      });
+    }
   }
 
   async findOneById(id: string) {
