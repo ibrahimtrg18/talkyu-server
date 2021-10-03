@@ -8,14 +8,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'passport-strategy/node_modules/@types/express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/decorators/user.decorator';
-import { Payload } from 'src/interfaces/payload.interface';
 import { response } from 'src/utils/response';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 
+@ApiTags('conversation')
 @Controller('conversation')
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}

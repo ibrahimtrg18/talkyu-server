@@ -24,7 +24,9 @@ import { OAuth2Client } from 'google-auth-library';
 import { SearchUserDto } from './dto/search-user.dto';
 import { Payload } from 'src/interfaces/payload.interface';
 import { User } from 'src/decorators/user.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user')
 @Controller('users')
 export class UsersController {
   constructor(

@@ -20,7 +20,9 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { response } from 'src/utils/response';
 import { User } from 'src/decorators/user.decorator';
 import { Payload } from 'src/interfaces/payload.interface';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('friend')
 @Controller('friend')
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}
