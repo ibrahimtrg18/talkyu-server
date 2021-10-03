@@ -12,14 +12,16 @@ export class WsGuard implements CanActivate {
     context: any,
   ): boolean | any | Promise<boolean | any> | Observable<boolean | any> {
     try {
-      const client = context.switchToWs().getClient();
-
-      const bearerToken = client.handshake.headers.authorization.split(' ')[1];
-      if (!bearerToken) {
-        return false;
-      }
-      const decoded = jwt.verify(bearerToken, jwtConstants.secret) as Payload;
       return new Promise((resolve, reject) => {
+        const client = context.switchToWs().getClient();
+
+        const bearerToken = client.handshake.headers.authorization.split(
+          ' ',
+        )[1];
+        if (!bearerToken) {
+          reject('Invalid Bearer');
+        }
+        const decoded = jwt.verify(bearerToken, jwtConstants.secret) as Payload;
         return this.usersService.findOneById(decoded.id).then((user) => {
           if (user) {
             context.switchToWs().getData().user = user;

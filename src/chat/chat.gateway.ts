@@ -21,8 +21,13 @@ export class ChatGateway {
   @UseGuards(WsGuard)
   @SubscribeMessage('createChat')
   async create(@MessageBody() createChatDto: CreateChatDto) {
-    const chat = await this.chatService.create(createChatDto);
-    return this.server.emit('createChat', chat);
+    try {
+      const chat = await this.chatService.create(createChatDto);
+      return this.server.emit('createChat', chat);
+    } catch (err) {
+      console.log(err);
+      return this.server.emit('createChat', err);
+    }
   }
 
   @SubscribeMessage('findAllChat')
