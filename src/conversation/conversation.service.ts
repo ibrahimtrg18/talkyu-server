@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm/repository/Repository';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
@@ -19,8 +19,8 @@ export class ConversationService {
     createConversationDto: CreateConversationDto,
   ): Promise<[HttpStatus, CreateConversationDto & Conversation]> {
     let isUsersHaveNotFound = false;
-    const users = await Promise.all(
-      createConversationDto.users.map(async (user) => {
+    const user = await Promise.all(
+      createConversationDto.user.map(async (user) => {
         const isExist = await this.userRepository.findOne(user.id);
 
         if (isExist) {
@@ -38,7 +38,7 @@ export class ConversationService {
         null,
         await this.conversationRepository.save({
           ...createConversationDto,
-          users: users,
+          user: user,
         }),
       ];
     }
@@ -54,7 +54,7 @@ export class ConversationService {
     return [
       null,
       await this.conversationRepository.findOne({
-        relations: ['users'],
+        relations: ['user'],
         where: { id },
       }),
     ];

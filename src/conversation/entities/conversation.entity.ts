@@ -1,12 +1,11 @@
 import { Chat } from 'src/chat/entities/chat.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -26,7 +25,7 @@ export class Conversation {
 
   @ManyToMany(() => User, (user) => user.conversations)
   @JoinTable()
-  users: User[];
+  user: User[];
 
   @CreateDateColumn({
     type: 'timestamp',

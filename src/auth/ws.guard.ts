@@ -1,13 +1,13 @@
 import * as jwt from 'jsonwebtoken';
 import { CanActivate, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from 'src/user/user.service';
 import { jwtConstants } from './constants';
 import { Payload } from 'src/interfaces/payload.interface';
 
 @Injectable()
 export class WsGuard implements CanActivate {
-  constructor(private usersService: UsersService) {}
+  constructor(private userService: UsersService) {}
   canActivate(
     context: any,
   ): boolean | any | Promise<boolean | any> | Observable<boolean | any> {
@@ -22,7 +22,7 @@ export class WsGuard implements CanActivate {
           reject('Invalid Bearer');
         }
         const decoded = jwt.verify(bearerToken, jwtConstants.secret) as Payload;
-        return this.usersService.findOneById(decoded.id).then((user) => {
+        return this.userService.findOneById(decoded.id).then((user) => {
           if (user) {
             context.switchToWs().getData().user = user;
             resolve(true);

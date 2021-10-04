@@ -1,4 +1,8 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+} from '@nestjs/websockets';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
@@ -24,7 +28,10 @@ export class ConversationGateway {
 
   @SubscribeMessage('updateConversation')
   update(@MessageBody() updateConversationDto: UpdateConversationDto) {
-    return this.conversationService.update(updateConversationDto.id, updateConversationDto);
+    return this.conversationService.update(
+      updateConversationDto.id,
+      updateConversationDto,
+    );
   }
 
   @SubscribeMessage('removeConversation')
