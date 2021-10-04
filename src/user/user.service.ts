@@ -2,18 +2,20 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Friend } from 'src/friend/entities/friend.entity';
-import { Repository } from 'typeorm';
+import { isEmail } from 'src/utils/validation';
+import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { validate } from 'uuid';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private userRepository: Repository<User>,
     @InjectRepository(Friend)
     private friendRepository: Repository<Friend>,
     @InjectRepository(Conversation)
@@ -29,7 +31,7 @@ export class UsersService {
       return [HttpStatus.CONFLICT, null];
     }
 
-    return [null, await this.usersRepository.save(createUserDto)];
+    return [null, await this.userRepository.save(createUserDto)];
   }
 
   async registerGoogle({
@@ -45,7 +47,7 @@ export class UsersService {
 
     return [
       null,
-      await this.usersRepository.save({
+      await this.userRepository.save({
         email,
         name,
         password: '',
@@ -55,26 +57,40 @@ export class UsersService {
   }
 
   async findByQuery(searchUserDto: SearchUserDto) {
-    return await this.usersRepository.find(searchUserDto);
+    const { q } = searchUserDto;
+
+    if (validate(q)) {
+      return await this.userRepository.find({
+        id: q,
+      });
+    } else if (isEmail(q)) {
+      return await this.userRepository.find({
+        email: q,
+      });
+    } else {
+      return await this.userRepository.find({
+        name: Like(`%${q}%`),
+      });
+    }
   }
 
   async findOneById(id: string) {
-    return await this.usersRepository.findOne(id);
+    return await this.userRepository.findOne(id);
   }
 
   async findOneByEmail(email: string) {
-    return await this.usersRepository.findOne({ email });
+    return await this.userRepository.findOne({ email });
   }
 
   async findByLogin(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
-    return await this.usersRepository.findOne(loginUserDto);
+    return await this.userRepository.findOne(loginUserDto);
   }
 
   async updateAccount(
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<[HttpStatus, CreateUserDto & User]> {
-    const isPasswordMatch = await this.usersRepository.findOne({
+    const isPasswordMatch = await this.userRepository.findOne({
       password: updateUserDto.password,
     });
 
@@ -82,7 +98,7 @@ export class UsersService {
       return [HttpStatus.FORBIDDEN, null];
     }
 
-    const user = await this.usersRepository.findOne({
+    const user = await this.userRepository.findOne({
       id,
     });
 
@@ -92,7 +108,7 @@ export class UsersService {
 
     const { password, ...rest } = updateUserDto;
 
-    return [null, await this.usersRepository.save({ ...user, ...rest })];
+    return [null, await this.userRepository.save({ ...user, ...rest })];
   }
 
   async getFriends(id: string) {
@@ -105,7 +121,7 @@ export class UsersService {
   async getConversations(id: string) {
     return await this.conversationRepository
       .createQueryBuilder('conversation')
-      .leftJoinAndSelect('conversation.users', 'user')
+      .leftJoinAndSelect('conversation.user', 'user')
       .where('user.id = :id', { id })
       .getMany();
   }

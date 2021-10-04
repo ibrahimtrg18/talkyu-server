@@ -5,13 +5,12 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Res,
   HttpStatus,
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Response, Request } from 'express';
@@ -24,18 +23,20 @@ import { OAuth2Client } from 'google-auth-library';
 import { SearchUserDto } from './dto/search-user.dto';
 import { Payload } from 'src/interfaces/payload.interface';
 import { User } from 'src/decorators/user.decorator';
+import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
+import { createFile, getFileToBase64 } from '../utils/file';
 
-@Controller('users')
+@Controller('user')
 export class UsersController {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly userService: UsersService,
     private readonly authService: AuthService,
   ) {}
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
-      const [error, newUser] = await this.usersService.register(createUserDto);
+      const [error, newUser] = await this.userService.register(createUserDto);
 
       if (error) {
         return response(res, error, {
@@ -60,7 +61,14 @@ export class UsersController {
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
     try {
-      const token = await this.authService.login(loginUserDto);
+      const [error, token] = await this.authService.login(loginUserDto);
+
+      if (error) {
+        return response(res, error, {
+          message: 'Email and Password incorrect!',
+          data: token,
+        });
+      }
 
       return response(res, HttpStatus.OK, {
         message: 'Successfully Login',
@@ -90,7 +98,7 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      const [error, newUser] = await this.usersService.registerGoogle({
+      const [error, newUser] = await this.userService.registerGoogle({
         email: payload.email,
         name: payload.name,
         google_open_id: payload.sub,
@@ -129,7 +137,7 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      const [error, newUser] = await this.usersService.registerGoogle({
+      const [error, newUser] = await this.userService.registerGoogle({
         email: payload.email,
         name: payload.name,
         google_open_id: payload.sub,
@@ -173,7 +181,7 @@ export class UsersController {
         });
       }
 
-      const [error, newUser] = await this.usersService.updateAccount(
+      const [error, newUser] = await this.userService.updateAccount(
         user.id,
         updateUserDto,
       );
@@ -207,11 +215,58 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('account')
-  async account(@Req() req: Request, @Res() res: Response) {
+  async account(@User() user: Payload, @Res() res: Response) {
     try {
       return response(res, HttpStatus.OK, {
         message: 'Successfully data account',
-        data: req.user,
+        data: user,
+      });
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('account/avatar')
+  async updateAvatar(
+    @User() user: Payload,
+    @Body() updateUserAvatarDto: UpdateUserAvatarDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const { file } = updateUserAvatarDto;
+
+      createFile(file, { prefix: ['user', 'avatar'], name: user.id });
+
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully update avatar',
+      });
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('account/avatar')
+  async getAvatar(@User() user: Payload, @Res() res: Response) {
+    try {
+      const base64 = getFileToBase64({
+        prefix: ['user', 'avatar'],
+        name: user.id,
+        ext: 'png',
+      });
+
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully update avatar',
+        data: `data:image/png;base64,${base64}`,
       });
     } catch (e) {
       console.error(e);
@@ -226,7 +281,7 @@ export class UsersController {
   @Get('friend')
   async friend(@Res() res: Response, @User() user: Payload) {
     try {
-      const friends = await this.usersService.getFriends(user.id);
+      const friends = await this.userService.getFriends(user.id);
 
       return response(res, HttpStatus.OK, {
         message: `You have ${friends.length} friends`,
@@ -245,7 +300,7 @@ export class UsersController {
   @Get('conversation')
   async conversations(@Res() res: Response, @User() user: Payload) {
     try {
-      const conversations = await this.usersService.getConversations(user.id);
+      const conversations = await this.userService.getConversations(user.id);
 
       return response(res, HttpStatus.OK, {
         message: `You have ${conversations.length} conversations`,
@@ -263,7 +318,7 @@ export class UsersController {
   @Get('search')
   async search(@Res() res: Response, @Query() searchUserDto: SearchUserDto) {
     try {
-      const results = await this.usersService.findByQuery(searchUserDto);
+      const results = await this.userService.findByQuery(searchUserDto);
 
       return response(res, HttpStatus.OK, { data: results });
     } catch (e) {
@@ -278,7 +333,7 @@ export class UsersController {
   @Get(':id')
   findOneById(@Res() res: Response, @Param('id') id: string) {
     try {
-      return this.usersService.findOneById(id);
+      return this.userService.findOneById(id);
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
