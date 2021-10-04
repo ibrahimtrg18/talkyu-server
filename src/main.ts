@@ -7,11 +7,14 @@ import {
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as morgan from 'morgan';
+import * as express from 'express';
+import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(morgan('tiny'));
   app.setGlobalPrefix('api');
+  app.use('/api', express.static(path.join(__dirname, '..', 'public')));
   app.useGlobalPipes(
     new ValidationPipe({
       exceptionFactory: (errors: ValidationError[]) => {

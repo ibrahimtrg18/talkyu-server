@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Res,
   HttpStatus,
   UseGuards,
@@ -24,6 +23,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { SearchUserDto } from './dto/search-user.dto';
 import { Payload } from 'src/interfaces/payload.interface';
 import { User } from 'src/decorators/user.decorator';
+import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
+import { createFile } from '../utils/file';
 
 @Controller('users')
 export class UsersController {
@@ -207,11 +208,40 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('account')
-  async account(@Req() req: Request, @Res() res: Response) {
+  async account(@User() user: Payload, @Res() res: Response) {
     try {
       return response(res, HttpStatus.OK, {
         message: 'Successfully data account',
-        data: req.user,
+        data: user,
+      });
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('account/avatar')
+  async updateAvatar(
+    @User() user: Payload,
+    @Body() updateUserAvatarDto: UpdateUserAvatarDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const { file } = updateUserAvatarDto;
+
+      createFile(file, { prefix: ['user', 'avatar'], name: user.id });
+
+      // const getFile = getFileToBase64({
+      //   prefix: ['user', 'avatar'],
+      //   name: user.id,
+      // });
+
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully update avatar',
       });
     } catch (e) {
       console.error(e);
