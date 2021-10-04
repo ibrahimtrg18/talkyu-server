@@ -15,7 +15,7 @@ import { validate } from 'uuid';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private userRepository: Repository<User>,
     @InjectRepository(Friend)
     private friendRepository: Repository<Friend>,
     @InjectRepository(Conversation)
@@ -31,7 +31,7 @@ export class UsersService {
       return [HttpStatus.CONFLICT, null];
     }
 
-    return [null, await this.usersRepository.save(createUserDto)];
+    return [null, await this.userRepository.save(createUserDto)];
   }
 
   async registerGoogle({
@@ -47,7 +47,7 @@ export class UsersService {
 
     return [
       null,
-      await this.usersRepository.save({
+      await this.userRepository.save({
         email,
         name,
         password: '',
@@ -60,37 +60,37 @@ export class UsersService {
     const { q } = searchUserDto;
 
     if (validate(q)) {
-      return await this.usersRepository.find({
+      return await this.userRepository.find({
         id: q,
       });
     } else if (isEmail(q)) {
-      return await this.usersRepository.find({
+      return await this.userRepository.find({
         email: q,
       });
     } else {
-      return await this.usersRepository.find({
+      return await this.userRepository.find({
         name: Like(`%${q}%`),
       });
     }
   }
 
   async findOneById(id: string) {
-    return await this.usersRepository.findOne(id);
+    return await this.userRepository.findOne(id);
   }
 
   async findOneByEmail(email: string) {
-    return await this.usersRepository.findOne({ email });
+    return await this.userRepository.findOne({ email });
   }
 
   async findByLogin(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
-    return await this.usersRepository.findOne(loginUserDto);
+    return await this.userRepository.findOne(loginUserDto);
   }
 
   async updateAccount(
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<[HttpStatus, CreateUserDto & User]> {
-    const isPasswordMatch = await this.usersRepository.findOne({
+    const isPasswordMatch = await this.userRepository.findOne({
       password: updateUserDto.password,
     });
 
@@ -98,7 +98,7 @@ export class UsersService {
       return [HttpStatus.FORBIDDEN, null];
     }
 
-    const user = await this.usersRepository.findOne({
+    const user = await this.userRepository.findOne({
       id,
     });
 
@@ -108,7 +108,7 @@ export class UsersService {
 
     const { password, ...rest } = updateUserDto;
 
-    return [null, await this.usersRepository.save({ ...user, ...rest })];
+    return [null, await this.userRepository.save({ ...user, ...rest })];
   }
 
   async getFriends(id: string) {
@@ -121,7 +121,7 @@ export class UsersService {
   async getConversations(id: string) {
     return await this.conversationRepository
       .createQueryBuilder('conversation')
-      .leftJoinAndSelect('conversation.users', 'user')
+      .leftJoinAndSelect('conversation.user', 'user')
       .where('user.id = :id', { id })
       .getMany();
   }

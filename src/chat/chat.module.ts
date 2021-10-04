@@ -4,8 +4,8 @@ import { ChatGateway } from './chat.gateway';
 import { AuthModule } from 'src/auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Chat } from './entities/chat.entity';
-import { UsersService } from 'src/users/users.service';
-import { User } from 'src/users/entities/user.entity';
+import { UsersService } from 'src/user/user.service';
+import { User } from 'src/user/entities/user.entity';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Friend } from 'src/friend/entities/friend.entity';
 

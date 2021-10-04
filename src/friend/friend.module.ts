@@ -3,7 +3,7 @@ import { FriendService } from './friend.service';
 import { FriendController } from './friend.controller';
 import { Friend } from './entities/friend.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Module({
   imports: [

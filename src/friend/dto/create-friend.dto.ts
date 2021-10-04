@@ -1,5 +1,5 @@
 import { IsDefined, IsNotEmpty } from 'class-validator';
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 
 export class CreateFriendDto {
   user: User;

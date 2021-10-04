@@ -10,7 +10,7 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Response, Request } from 'express';
@@ -26,17 +26,17 @@ import { User } from 'src/decorators/user.decorator';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
 import { createFile } from '../utils/file';
 
-@Controller('users')
+@Controller('user')
 export class UsersController {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly userService: UsersService,
     private readonly authService: AuthService,
   ) {}
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
-      const [error, newUser] = await this.usersService.register(createUserDto);
+      const [error, newUser] = await this.userService.register(createUserDto);
 
       if (error) {
         return response(res, error, {
@@ -91,7 +91,7 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      const [error, newUser] = await this.usersService.registerGoogle({
+      const [error, newUser] = await this.userService.registerGoogle({
         email: payload.email,
         name: payload.name,
         google_open_id: payload.sub,
@@ -130,7 +130,7 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      const [error, newUser] = await this.usersService.registerGoogle({
+      const [error, newUser] = await this.userService.registerGoogle({
         email: payload.email,
         name: payload.name,
         google_open_id: payload.sub,
@@ -174,7 +174,7 @@ export class UsersController {
         });
       }
 
-      const [error, newUser] = await this.usersService.updateAccount(
+      const [error, newUser] = await this.userService.updateAccount(
         user.id,
         updateUserDto,
       );
@@ -256,7 +256,7 @@ export class UsersController {
   @Get('friend')
   async friend(@Res() res: Response, @User() user: Payload) {
     try {
-      const friends = await this.usersService.getFriends(user.id);
+      const friends = await this.userService.getFriends(user.id);
 
       return response(res, HttpStatus.OK, {
         message: `You have ${friends.length} friends`,
@@ -275,7 +275,7 @@ export class UsersController {
   @Get('conversation')
   async conversations(@Res() res: Response, @User() user: Payload) {
     try {
-      const conversations = await this.usersService.getConversations(user.id);
+      const conversations = await this.userService.getConversations(user.id);
 
       return response(res, HttpStatus.OK, {
         message: `You have ${conversations.length} conversations`,
@@ -293,7 +293,7 @@ export class UsersController {
   @Get('search')
   async search(@Res() res: Response, @Query() searchUserDto: SearchUserDto) {
     try {
-      const results = await this.usersService.findByQuery(searchUserDto);
+      const results = await this.userService.findByQuery(searchUserDto);
 
       return response(res, HttpStatus.OK, { data: results });
     } catch (e) {
@@ -308,7 +308,7 @@ export class UsersController {
   @Get(':id')
   findOneById(@Res() res: Response, @Param('id') id: string) {
     try {
-      return this.usersService.findOneById(id);
+      return this.userService.findOneById(id);
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {

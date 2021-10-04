@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { User } from 'src/users/entities/user.entity';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { UpdateFriendDto } from './dto/update-friend.dto';
@@ -13,16 +13,14 @@ export class FriendService {
     @InjectRepository(Friend)
     private readonly friendRepository: Repository<Friend>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(
     createFriendDto: CreateFriendDto,
   ): Promise<[number, CreateFriendDto & Friend, string]> {
-    const user = await this.usersRepository.findOne(createFriendDto.user.id);
-    const friend = await this.usersRepository.findOne(
-      createFriendDto.friend.id,
-    );
+    const user = await this.userRepository.findOne(createFriendDto.user.id);
+    const friend = await this.userRepository.findOne(createFriendDto.friend.id);
 
     const isExist = await this.friendRepository.findOne({
       where: { user, friend },

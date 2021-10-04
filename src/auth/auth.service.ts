@@ -1,18 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginGoogleUserDto, LoginUserDto } from 'src/users/dto/login-user.dto';
-import { UsersService } from 'src/users/users.service';
+import { LoginGoogleUserDto, LoginUserDto } from 'src/user/dto/login-user.dto';
+import { UsersService } from 'src/user/user.service';
 import { Payload } from '../interfaces/payload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    private userService: UsersService,
     private jwtService: JwtService,
   ) {}
 
   async validateUser(payload: Payload): Promise<Payload> {
-    const user = await this.usersService.findOneById(payload.id);
+    const user = await this.userService.findOneById(payload.id);
     if (user) {
       const { password, ...result } = user;
       return result;
@@ -21,7 +21,7 @@ export class AuthService {
   }
 
   async login(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
-    const user = await this.usersService.findByLogin(loginUserDto);
+    const user = await this.userService.findByLogin(loginUserDto);
 
     if (!user) {
       throw new HttpException(
