@@ -61,7 +61,14 @@ export class UsersController {
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
     try {
-      const token = await this.authService.login(loginUserDto);
+      const [error, token] = await this.authService.login(loginUserDto);
+
+      if (error) {
+        return response(res, error, {
+          message: 'Email and Password incorrect!',
+          data: token,
+        });
+      }
 
       return response(res, HttpStatus.OK, {
         message: 'Successfully Login',

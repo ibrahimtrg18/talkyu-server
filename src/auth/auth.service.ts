@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginGoogleUserDto, LoginUserDto } from 'src/user/dto/login-user.dto';
 import { UsersService } from 'src/user/user.service';
 import { Payload } from '../interfaces/payload.interface';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,20 +21,22 @@ export class AuthService {
     return null;
   }
 
-  async login(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
+  async login(
+    loginUserDto: LoginUserDto | LoginGoogleUserDto,
+  ): Promise<[HttpStatus, { access_token: string }]> {
     const user = await this.userService.findByLogin(loginUserDto);
 
     if (!user) {
-      throw new HttpException(
-        'Email and Password incorrect!',
-        HttpStatus.UNAUTHORIZED,
-      );
+      return [HttpStatus.UNAUTHORIZED, null];
     }
 
     const payload = { id: user.id, email: user.email };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    return [
+      null,
+      {
+        access_token: this.jwtService.sign(payload),
+      },
+    ];
   }
 }
