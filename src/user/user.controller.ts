@@ -24,7 +24,7 @@ import { SearchUserDto } from './dto/search-user.dto';
 import { Payload } from 'src/interfaces/payload.interface';
 import { User } from 'src/decorators/user.decorator';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
-import { createFile } from '../utils/file';
+import { createFile, getFileToBase64 } from '../utils/file';
 
 @Controller('user')
 export class UsersController {
@@ -235,13 +235,31 @@ export class UsersController {
 
       createFile(file, { prefix: ['user', 'avatar'], name: user.id });
 
-      // const getFile = getFileToBase64({
-      //   prefix: ['user', 'avatar'],
-      //   name: user.id,
-      // });
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully update avatar',
+      });
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('account/avatar')
+  async getAvatar(@User() user: Payload, @Res() res: Response) {
+    try {
+      const base64 = getFileToBase64({
+        prefix: ['user', 'avatar'],
+        name: user.id,
+        ext: 'png',
+      });
 
       return response(res, HttpStatus.OK, {
         message: 'Successfully update avatar',
+        data: `data:image/png;base64,${base64}`,
       });
     } catch (e) {
       console.error(e);

@@ -5,7 +5,7 @@ import * as fileType from 'file-type';
 interface Path {
   prefix: string[];
   name: string;
-  file?: string;
+  ext?: string;
 }
 
 export const createFile = async (base64: string, { prefix, name }: Path) => {
@@ -21,11 +21,16 @@ export const createFile = async (base64: string, { prefix, name }: Path) => {
   );
 };
 
-export const getFileToBase64 = ({ prefix, name, file }: Path) => {
-  return fs.readFileSync(
-    path.join(path.resolve('./'), ...['public', ...prefix, `${name}.${file}`]),
-    {
-      encoding: 'base64',
-    },
+export const getFile = async ({ prefix, name, ext }: Path) => {
+  return fs.createReadStream(
+    path.join(path.resolve('./'), ...['public', ...prefix, `${name}.${ext}`]),
   );
+};
+
+export const getFileToBase64 = ({ prefix, name, ext }: Path) => {
+  return fs
+    .readFileSync(
+      path.join(path.resolve('./'), ...['public', ...prefix, `${name}.${ext}`]),
+    )
+    .toString('base64');
 };
