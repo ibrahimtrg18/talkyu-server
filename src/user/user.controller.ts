@@ -146,7 +146,9 @@ export class UsersController {
       });
 
       if (error) {
-        const token = await this.authService.login({ email: payload.email });
+        const [error, token] = await this.authService.login({
+          email: payload.email,
+        });
 
         return response(res, HttpStatus.OK, {
           message: 'Successfully Login',
