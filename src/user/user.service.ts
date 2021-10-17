@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Friend } from 'src/friend/entities/friend.entity';
 import { isEmail } from 'src/utils/validation';
-import { Like, Repository } from 'typeorm';
+import { Like, Repository, getConnection } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
@@ -61,15 +61,24 @@ export class UsersService {
 
     if (validate(q)) {
       return await this.userRepository.find({
-        id: q,
+        select: ['id', 'name', 'email', 'created_at', 'updated_at'],
+        where: {
+          id: q,
+        },
       });
     } else if (isEmail(q)) {
       return await this.userRepository.find({
-        email: q,
+        select: ['id', 'name', 'email', 'created_at', 'updated_at'],
+        where: {
+          email: q,
+        },
       });
     } else {
       return await this.userRepository.find({
-        name: Like(`%${q}%`),
+        select: ['id', 'name', 'email', 'created_at', 'updated_at'],
+        where: {
+          name: Like(`%${q}%`),
+        },
       });
     }
   }
@@ -112,10 +121,14 @@ export class UsersService {
   }
 
   async getFriends(id: string) {
-    return await this.friendRepository.find({
-      relations: ['user'],
-      where: { user: { id } },
-    });
+    return await getConnection().query(
+      `
+      SELECT friend.friendId as id, user.name, user.email, friend.created_at, friend.updated_at FROM friend 
+        LEFT JOIN user 
+        ON user.id = friend.friendId 
+      WHERE friend.userId = ?`,
+      [id],
+    );
   }
 
   async getConversations(id: string) {
