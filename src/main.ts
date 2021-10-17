@@ -22,7 +22,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/', app, document);
+  SwaggerModule.setup('/openapi', app, document);
 
   app.use('/api', express.static(path.join(__dirname, '..', 'public')));
   app.useGlobalPipes(
