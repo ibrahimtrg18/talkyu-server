@@ -64,6 +64,7 @@ export class ConversationService {
     const chats = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.chats', 'chat')
+      .leftJoinAndSelect('chat.user', 'user')
       .where('conversation.id = :id', { id })
       .orderBy('chat.created_at', 'ASC')
       .getMany();
