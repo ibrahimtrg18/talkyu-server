@@ -96,11 +96,12 @@ export class UsersService {
   }
 
   async updateAccount(
-    id: string,
+    userId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<[HttpStatus, CreateUserDto & User]> {
     const isPasswordMatch = await this.userRepository.findOne({
-      password: updateUserDto.password,
+      id: userId,
+      password: updateUserDto.confirmPassword,
     });
 
     if (!isPasswordMatch) {
@@ -108,14 +109,25 @@ export class UsersService {
     }
 
     const user = await this.userRepository.findOne({
-      id,
+      id: userId,
     });
 
     if (!user) {
       return [HttpStatus.NOT_FOUND, null];
     }
 
-    const { password, ...rest } = updateUserDto;
+    const { confirmPassword, newPassword, ...rest } = updateUserDto;
+
+    if (newPassword) {
+      return [
+        null,
+        await this.userRepository.save({
+          ...user,
+          ...rest,
+          password: newPassword,
+        }),
+      ];
+    }
 
     return [null, await this.userRepository.save({ ...user, ...rest })];
   }

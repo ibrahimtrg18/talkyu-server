@@ -179,7 +179,7 @@ export class UsersController {
     @User() user: Payload,
   ) {
     try {
-      if (!updateUserDto.password) {
+      if (!updateUserDto.confirmPassword) {
         return response(res, HttpStatus.BAD_REQUEST, {
           message: 'Password is required!',
         });
