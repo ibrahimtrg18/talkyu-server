@@ -25,7 +25,7 @@ export class Conversation {
 
   @ManyToMany(() => User, (user) => user.conversations)
   @JoinTable()
-  user: User[];
+  users: User[];
 
   @CreateDateColumn({
     type: 'timestamp',

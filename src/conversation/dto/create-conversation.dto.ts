@@ -27,5 +27,5 @@ export class CreateConversationDto {
   @ValidateNested({ each: true })
   @ArrayMinSize(1)
   @Type(() => UserDto)
-  user: UserDto[];
+  users: UserDto[];
 }

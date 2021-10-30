@@ -134,7 +134,7 @@ export class UsersService {
   async getConversations(id: string) {
     return await this.conversationRepository
       .createQueryBuilder('conversation')
-      .leftJoinAndSelect('conversation.user', 'user')
+      .leftJoinAndSelect('conversation.users', 'user')
       .where('user.id = :id', { id })
       .getMany();
   }

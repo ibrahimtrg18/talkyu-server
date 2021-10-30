@@ -30,7 +30,7 @@ export class ConversationController {
   ) {
     const [error, conversation] = await this.conversationService.create({
       ...createConversationDto,
-      user: [...createConversationDto.user, user],
+      users: [...createConversationDto.users, user],
     });
 
     if (error) {

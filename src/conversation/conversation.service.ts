@@ -20,11 +20,11 @@ export class ConversationService {
   ): Promise<[HttpStatus, CreateConversationDto & Conversation]> {
     let isUsersHaveNotFound = false;
     const user = await Promise.all(
-      createConversationDto.user.map(async (user) => {
+      createConversationDto.users.map(async (user) => {
         const isExist = await this.userRepository.findOne(user.id);
 
         if (isExist) {
-          return user;
+          return isExist;
         } else {
           isUsersHaveNotFound = true;
         }
@@ -38,7 +38,7 @@ export class ConversationService {
         null,
         await this.conversationRepository.save({
           ...createConversationDto,
-          user: user,
+          users: user,
         }),
       ];
     }
@@ -54,7 +54,7 @@ export class ConversationService {
     return [
       null,
       await this.conversationRepository.findOne({
-        relations: ['user'],
+        relations: ['users'],
         where: { id },
       }),
     ];
