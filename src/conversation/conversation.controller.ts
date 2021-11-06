@@ -65,8 +65,26 @@ export class ConversationController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':id/chats')
-  getChatsByConversationId(@Param('id') id: string) {
-    return this.conversationService.getChatsById(id);
+  @Get(':id/chat')
+  async getChatsByConversationId(
+    @Res() res: Response,
+    @Param('id') id: string,
+  ) {
+    const [
+      error,
+      conversationChat,
+    ] = await this.conversationService.getChatsById(id);
+
+    if (error) {
+      return response(res, error, {
+        message: 'Please, check user again!',
+        data: conversationChat,
+      });
+    } else {
+      return response(res, HttpStatus.CREATED, {
+        message: 'Successfully create conversation!',
+        data: conversationChat,
+      });
+    }
   }
 }

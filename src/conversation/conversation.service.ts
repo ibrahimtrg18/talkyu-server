@@ -60,16 +60,22 @@ export class ConversationService {
     ];
   }
 
-  async getChatsById(id: string) {
+  async getChatsById(id: string): Promise<[HttpStatus, any]> {
+    const isExist = await this.conversationRepository.findOne(id);
+
+    if (!isExist) {
+      return [HttpStatus.NOT_FOUND, null];
+    }
+
     const chats = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.chats', 'chat')
       .leftJoinAndSelect('chat.user', 'user')
       .where('conversation.id = :id', { id })
       .orderBy('chat.created_at', 'ASC')
-      .getMany();
+      .getOne();
 
-    return chats;
+    return [null, chats];
   }
 
   findAll() {
