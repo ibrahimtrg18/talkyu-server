@@ -23,7 +23,7 @@ export class AuthService {
 
   async login(
     loginUserDto: LoginUserDto | LoginGoogleUserDto,
-  ): Promise<[HttpStatus, { access_token: string }]> {
+  ): Promise<[HttpStatus, { id: string; access_token: string }]> {
     const user = await this.userService.findByLogin(loginUserDto);
 
     if (!user) {
@@ -35,6 +35,7 @@ export class AuthService {
     return [
       null,
       {
+        id: user.id,
         access_token: this.jwtService.sign(payload),
       },
     ];
