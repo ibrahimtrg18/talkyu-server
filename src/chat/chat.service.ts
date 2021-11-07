@@ -15,7 +15,7 @@ export class ChatService {
     private conversationRepository: Repository<Conversation>,
   ) {}
 
-  create(createChatDto: CreateChatDto) {
+  create(createChatDto: CreateChatDto): Promise<Chat> {
     const conversation = this.conversationRepository.findOne(
       createChatDto.conversation.id,
     );

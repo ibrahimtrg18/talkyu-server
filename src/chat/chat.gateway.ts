@@ -22,7 +22,9 @@ export class ChatGateway {
   @SubscribeMessage('createChat')
   async create(@MessageBody() createChatDto: CreateChatDto) {
     try {
-      const chat = await this.chatService.create(createChatDto);
+      const { conversation, ...chat } = await this.chatService.create(
+        createChatDto,
+      );
       return this.server.emit('createChat', chat);
     } catch (err) {
       console.log(err);
