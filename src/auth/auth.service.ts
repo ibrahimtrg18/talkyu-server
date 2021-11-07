@@ -1,6 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginGoogleUserDto, LoginUserDto } from 'src/user/dto/login-user.dto';
+import {
+  LoginGoogleUserDto,
+  LoginToken,
+  LoginUserDto,
+} from 'src/user/dto/login-user.dto';
 import { UsersService } from 'src/user/user.service';
 import { Payload } from '../interfaces/payload.interface';
 import { User } from '../user/entities/user.entity';
@@ -25,6 +29,28 @@ export class AuthService {
     loginUserDto: LoginUserDto | LoginGoogleUserDto,
   ): Promise<[HttpStatus, { id: string; access_token: string }]> {
     const user = await this.userService.findByLogin(loginUserDto);
+
+    if (!user) {
+      return [HttpStatus.UNAUTHORIZED, null];
+    }
+
+    const payload = { id: user.id, email: user.email };
+
+    return [
+      null,
+      {
+        id: user.id,
+        access_token: this.jwtService.sign(payload),
+      },
+    ];
+  }
+
+  async token(
+    loginUserDto: LoginToken,
+  ): Promise<[HttpStatus, { id: string; access_token: string }]> {
+    const { id } = await this.jwtService.verify(loginUserDto.token);
+
+    const user = await this.userService.findOneById(id);
 
     if (!user) {
       return [HttpStatus.UNAUTHORIZED, null];

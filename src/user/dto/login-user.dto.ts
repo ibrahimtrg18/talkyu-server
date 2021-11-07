@@ -6,3 +6,7 @@ export class LoginUserDto {
 export class LoginGoogleUserDto {
   email: string;
 }
+
+export class LoginToken {
+  token: string;
+}

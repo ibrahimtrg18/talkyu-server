@@ -26,6 +26,7 @@ import { User } from 'src/decorators/user.decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
 import { createFile, getFileToBase64 } from '../utils/file';
+import { TokenUserDto } from './dto/token-user.dto';
 
 @ApiTags('user')
 @Controller('user')
@@ -162,6 +163,37 @@ export class UsersController {
           data: token,
         });
       }
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Post('token')
+  async token(
+    @Res() res: Response,
+    @Body() tokenUserDto: TokenUserDto,
+    @User() user: Payload,
+  ) {
+    try {
+      const [error, token] = await this.authService.token({
+        token: tokenUserDto.token,
+      });
+
+      if (error) {
+        return response(res, error, {
+          message: 'Invalid Token!',
+        });
+      }
+
+      return response(res, HttpStatus.OK, {
+        message: 'Successfully Login',
+        data: token,
+      });
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
