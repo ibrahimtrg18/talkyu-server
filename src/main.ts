@@ -1,3 +1,6 @@
+import * as morgan from 'morgan';
+import * as express from 'express';
+import * as path from 'path';
 import {
   BadRequestException,
   HttpStatus,
@@ -6,13 +9,12 @@ import {
 } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import * as morgan from 'morgan';
-import * as express from 'express';
-import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get<ConfigService>(ConfigService);
   app.use(morgan('tiny'));
   app.setGlobalPrefix('api');
 
@@ -44,6 +46,8 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  console.log(configService.get('PORT'));
+
+  await app.listen(configService.get('PORT') || 3000);
 }
 bootstrap();
