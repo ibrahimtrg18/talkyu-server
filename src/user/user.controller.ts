@@ -9,6 +9,8 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,6 +29,9 @@ import { ApiTags } from '@nestjs/swagger';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
 import { createFile, getFileToBase64 } from '../utils/file';
 import { TokenUserDto } from './dto/token-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
 
 @ApiTags('user')
 @Controller('user')
@@ -291,6 +296,63 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('account/avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './public/uploads/user/avatar/',
+        filename: function (req: Request, file, cb) {
+          const { id } = req.user as Payload;
+          cb(null, `${id}${path.extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: function (req: Request, file, cb) {
+        if (
+          file.mimetype !== 'image/png' &&
+          file.mimetype !== 'image/jpg' &&
+          file.mimetype !== 'image/jpeg'
+        ) {
+          return cb(new Error('Extension not allowed'), false);
+        }
+        return cb(null, true);
+      },
+    }),
+  )
+  async uploadAvatar(
+    @Res() res: Response,
+    @UploadedFile() file: Express.Multer.File,
+    @User() user: Payload,
+  ) {
+    try {
+      if (!file) {
+        return response(res, HttpStatus.BAD_REQUEST, {
+          message: "File key: 'avatar' is required!",
+        });
+      }
+
+      const base64 = getFileToBase64({
+        prefix: ['uploads', 'user', 'avatar'],
+        name: file.filename,
+        mimetype: file.mimetype,
+      });
+
+      return response(res, HttpStatus.OK, {
+        message: 'Ok',
+        data: {
+          path: path.normalize(file.path.replace('public', '')),
+          base64: base64,
+        },
+      });
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: e,
+        data: null,
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('account/avatar')
   async getAvatar(@User() user: Payload, @Res() res: Response) {
     try {
@@ -302,7 +364,7 @@ export class UsersController {
 
       return response(res, HttpStatus.OK, {
         message: 'Successfully update avatar',
-        data: `data:image/png;base64,${base64}`,
+        data: base64,
       });
     } catch (e) {
       console.error(e);
