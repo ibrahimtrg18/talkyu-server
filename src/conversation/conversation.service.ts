@@ -72,7 +72,7 @@ export class ConversationService {
       .leftJoinAndSelect('conversation.chats', 'chat')
       .leftJoinAndSelect('chat.user', 'user')
       .where('conversation.id = :id', { id })
-      .orderBy('chat.created_at', 'ASC')
+      .orderBy('chat.created_at', 'DESC')
       .getOne();
 
     return [null, chats];
