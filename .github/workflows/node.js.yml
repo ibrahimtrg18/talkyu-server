@@ -23,11 +23,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      - run: |
+      - name: Create env file
+        run: |
           touch .env
           echo GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} >> .env
           echo GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} >> .env
+          cat .env
       - run: yarn cache clean
       - run: yarn install
       - run: yarn build
-      - run: pm2 restart TalkyServer
+      - run: pm2 restart Talkyu
