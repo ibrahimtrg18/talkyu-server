@@ -1,12 +1,15 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as fileType from 'file-type';
+import * as util from 'util';
+import * as mime from 'mime-types';
+import { HttpStatus } from '@nestjs/common';
+
+const readdir = util.promisify(fs.readdir);
 
 interface Path {
   prefix: string[];
   name: string;
-  mimetype?: string;
-  ext?: string;
 }
 
 export const createFile = async (base64: string, { prefix, name }: Path) => {
@@ -22,27 +25,68 @@ export const createFile = async (base64: string, { prefix, name }: Path) => {
   );
 };
 
-export const getFile = async ({ prefix, name, ext }: Path) => {
-  return fs.createReadStream(
-    path.join(
-      path.resolve('./'),
-      ...['public', ...prefix, ext ? `${name}.${ext}` : name],
-    ),
-  );
+export const getFile = async ({
+  prefix,
+  name,
+}: Path): Promise<[HttpStatus, fs.ReadStream, string]> => {
+  try {
+    const files = await readdir(
+      path.join(path.resolve('./'), ...['public', ...prefix]),
+    );
+
+    const filename = files.find(
+      (file) => path.basename(file, path.extname(file)) === name,
+    );
+
+    if (!filename) {
+      return [HttpStatus.NOT_FOUND, null, 'application/octet-stream'];
+    }
+
+    return [
+      null,
+      fs.createReadStream(
+        path.join(path.resolve('./'), ...['public', ...prefix, filename]),
+      ),
+      mime.lookup(filename) as string,
+    ];
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
 };
 
-export const getFileToBase64 = ({ prefix, name, ext, mimetype = '' }: Path) => {
-  return formatBase64({
-    mimetype,
-    encoded: fs
-      .readFileSync(
-        path.join(
-          path.resolve('./'),
-          ...['public', ...prefix, ext ? `${name}.${ext}` : name],
-        ),
-      )
-      .toString('base64'),
-  });
+export const getFileToBase64 = async ({
+  prefix,
+  name,
+}: Path): Promise<[HttpStatus, string]> => {
+  try {
+    const files = await readdir(
+      path.join(path.resolve('./'), ...['public', ...prefix]),
+    );
+
+    const filename = files.find(
+      (file) => path.basename(file, path.extname(file)) === name,
+    );
+
+    if (!filename) {
+      return [HttpStatus.NOT_FOUND, null];
+    }
+
+    return [
+      null,
+      formatBase64({
+        mimetype: mime.lookup(filename),
+        encoded: fs
+          .readFileSync(
+            path.join(path.resolve('./'), ...['public', ...prefix, filename]),
+          )
+          .toString('base64'),
+      }),
+    ];
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
 };
 
 const formatBase64 = ({ mimetype, charset = 'base64', encoded }) => {
