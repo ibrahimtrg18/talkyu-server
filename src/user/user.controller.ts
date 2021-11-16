@@ -355,18 +355,14 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('account/avatar')
-  async getAvatar(
-    @User() user: Payload,
-    @Res() res: Response,
-    @Query('type') type: string,
-  ) {
+  async getAvatar(@Res() res: Response, @Query() query: any) {
     try {
+      const { userId, type } = query;
       if (type && type.toLowerCase() === 'base64') {
         const [error, base64] = await getFileToBase64({
           prefix: ['uploads', 'user', 'avatar'],
-          name: user.id,
+          name: userId,
         });
 
         if (error) {
@@ -382,7 +378,7 @@ export class UsersController {
       } else {
         const [error, file, contentType] = await getFile({
           prefix: ['uploads', 'user', 'avatar'],
-          name: user.id,
+          name: userId,
         });
 
         if (error) {
