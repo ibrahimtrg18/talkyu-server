@@ -27,7 +27,7 @@ import { Payload } from 'src/interfaces/payload.interface';
 import { User } from 'src/decorators/user.decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
-import { createFile, getFileToBase64 } from '../utils/file';
+import { createFile, getFileToBase64, getFile } from '../utils/file';
 import { TokenUserDto } from './dto/token-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -328,11 +328,16 @@ export class UsersController {
         });
       }
 
-      const base64 = getFileToBase64({
+      const [error, base64] = await getFileToBase64({
         prefix: ['uploads', 'user', 'avatar'],
-        name: file.filename,
-        mimetype: file.mimetype,
+        name: path.basename(file.filename, path.extname(file.filename)),
       });
+
+      if (error) {
+        return response(res, error, {
+          message: 'File Not Found',
+        });
+      }
 
       return response(res, HttpStatus.OK, {
         message: 'Ok',
@@ -352,18 +357,46 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('account/avatar')
-  async getAvatar(@User() user: Payload, @Res() res: Response) {
+  async getAvatar(
+    @User() user: Payload,
+    @Res() res: Response,
+    @Query('type') type: string,
+  ) {
     try {
-      const base64 = getFileToBase64({
-        prefix: ['user', 'avatar'],
-        name: user.id,
-        ext: 'png',
-      });
+      if (type && type.toLowerCase() === 'base64') {
+        const [error, base64] = await getFileToBase64({
+          prefix: ['uploads', 'user', 'avatar'],
+          name: user.id,
+        });
 
-      return response(res, HttpStatus.OK, {
-        message: 'Successfully update avatar',
-        data: base64,
-      });
+        if (error) {
+          return response(res, error, {
+            message: 'File Not Found',
+          });
+        }
+
+        return response(res, HttpStatus.OK, {
+          message: 'Successfully get avatar',
+          data: base64,
+        });
+      } else {
+        const [error, file, contentType] = await getFile({
+          prefix: ['uploads', 'user', 'avatar'],
+          name: user.id,
+        });
+
+        if (error) {
+          return response(res, error, {
+            message: 'File Not Found',
+          });
+        }
+
+        res.set({
+          'Content-Type': contentType,
+          'Content-Disposition': 'attachment; filename="package.json"',
+        });
+        return file.pipe(res);
+      }
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
