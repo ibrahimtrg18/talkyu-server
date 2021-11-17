@@ -21,28 +21,37 @@ export class User {
   @Column()
   email: string;
 
+  @Column({ type: 'text', nullable: false })
+  password?: string;
+
   @Column()
-  password: string;
+  phoneNumber: string;
+
+  @Column()
+  online: string;
+
+  @Column()
+  lastOnline: string;
 
   @Column({ nullable: true, default: null })
   google_open_id: string;
-
-  @OneToMany(() => User, (user) => user.friends)
-  friends: Friend[];
-
-  @ManyToMany(() => User, (user) => user.conversations)
-  conversations: Conversation[];
 
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  public created_at: Date;
+  created_at: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  public updated_at: Date;
+  updated_at: Date;
+
+  @OneToMany(() => User, (user) => user.friends)
+  friends: Friend[];
+
+  @ManyToMany(() => User, (user) => user.conversations)
+  conversations: Conversation[];
 }
