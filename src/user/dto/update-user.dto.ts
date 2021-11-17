@@ -14,6 +14,11 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNotEmpty()
   @IsString()
+  phoneNumber: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   newPassword: string;
 
   @IsDefined()
