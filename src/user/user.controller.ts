@@ -240,7 +240,7 @@ export class UsersController {
       }
 
       return response(res, HttpStatus.OK, {
-        message: 'Succesfully register new account',
+        message: 'Successfully update account',
         data: newUser,
       });
     } catch (e) {
