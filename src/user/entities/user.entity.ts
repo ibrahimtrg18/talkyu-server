@@ -27,11 +27,14 @@ export class User {
   @Column()
   phoneNumber: string;
 
-  @Column()
-  online: string;
+  @Column({ nullable: true, default: 0 })
+  online: boolean;
 
-  @Column()
-  lastOnline: string;
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
+  lastOnline: Date;
 
   @Column({ nullable: true, default: null })
   google_open_id: string;
