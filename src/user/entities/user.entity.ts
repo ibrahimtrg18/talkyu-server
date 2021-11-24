@@ -32,7 +32,7 @@ export class User {
 
   @Column({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
+    nullable: true,
   })
   lastOnline: Date;
 
