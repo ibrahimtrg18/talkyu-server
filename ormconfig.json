@@ -4,7 +4,7 @@
   "port": 3306,
   "username": "root",
   "password": "",
-  "database": "talky",
+  "database": "talkyu",
   "entities": ["dist/**/*.entity{.ts,.js}"],
   "migrations": ["dist/migrations/*{.ts,.js}"],
   "synchronize": true
