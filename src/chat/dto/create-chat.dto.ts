@@ -1,5 +1,5 @@
-import { Conversation } from 'src/conversation/entities/conversation.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Conversation } from '../../conversation/entities/conversation.entity';
+import { User } from '../../user/entities/user.entity';
 
 export class CreateChatDto {
   message: string;

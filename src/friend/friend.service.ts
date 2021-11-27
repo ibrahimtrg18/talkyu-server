@@ -1,8 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
-import { ResponseResult } from 'src/utils/response';
 import { Repository } from 'typeorm';
+
+import { User } from '../user/entities/user.entity';
+import { ResponseResult } from '../utils/response';
 import { AcceptFriendDto } from './dto/accept-friend.dto';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { RequestFriendDto } from './dto/request-friend.dto';

@@ -1,9 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginToken, LoginUserDto } from 'src/user/dto/login-user.dto';
-import { UsersService } from 'src/user/user.service';
-import { ResponseResult } from 'src/utils/response';
+
 import { Payload } from '../interfaces/payload.interface';
+import { LoginToken, LoginUserDto } from '../user/dto/login-user.dto';
+import { UsersService } from '../user/user.service';
+import { ResponseResult } from '../utils/response';
 
 @Injectable()
 export class AuthService {

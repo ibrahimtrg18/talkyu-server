@@ -1,15 +1,16 @@
-import * as morgan from 'morgan';
-import * as express from 'express';
-import * as path from 'path';
 import {
   BadRequestException,
   HttpStatus,
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as express from 'express';
+import * as morgan from 'morgan';
+import * as path from 'path';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {

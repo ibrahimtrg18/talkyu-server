@@ -1,8 +1,9 @@
 import {
-  WebSocketGateway,
-  SubscribeMessage,
   MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
 } from '@nestjs/websockets';
+
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';

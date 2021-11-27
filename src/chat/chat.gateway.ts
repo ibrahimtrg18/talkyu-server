@@ -1,12 +1,13 @@
 import { UseGuards } from '@nestjs/common';
 import {
-  WebSocketGateway,
-  SubscribeMessage,
   MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { WsGuard } from 'src/auth/ws.guard';
+
+import { WsGuard } from '../auth/ws.guard';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';

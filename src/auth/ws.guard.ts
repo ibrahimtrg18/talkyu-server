@@ -1,9 +1,10 @@
-import * as jwt from 'jsonwebtoken';
 import { CanActivate, Injectable } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
 import { Observable } from 'rxjs';
-import { UsersService } from 'src/user/user.service';
+
+import { Payload } from '../interfaces/payload.interface';
+import { UsersService } from '../user/user.service';
 import { jwtConstants } from './constants';
-import { Payload } from 'src/interfaces/payload.interface';
 
 @Injectable()
 export class WsGuard implements CanActivate {

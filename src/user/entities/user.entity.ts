@@ -1,5 +1,3 @@
-import { Conversation } from 'src/conversation/entities/conversation.entity';
-import { Friend } from 'src/friend/entities/friend.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,6 +7,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Conversation } from '../../conversation/entities/conversation.entity';
+import { Friend } from '../../friend/entities/friend.entity';
 
 @Entity()
 export class User {

@@ -1,5 +1,3 @@
-import { Chat } from 'src/chat/entities/chat.entity';
-import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -10,6 +8,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { Chat } from '../../chat/entities/chat.entity';
+import { User } from '../../user/entities/user.entity';
 import { ConversationType } from '../interfaces/ConversationType';
 
 @Entity()

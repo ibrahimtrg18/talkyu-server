@@ -2,17 +2,17 @@ import {
   Body,
   Controller,
   Get,
-  HttpStatus,
   Param,
   Post,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'passport-strategy/node_modules/@types/express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { User } from 'src/decorators/user.decorator';
-import { response } from 'src/utils/response';
+import { Response } from 'express';
+
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
+import { response } from '../utils/response';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 

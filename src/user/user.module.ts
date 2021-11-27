@@ -1,11 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { UsersService } from './user.service';
-import { UsersController } from './user.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { AuthModule } from '../auth/auth.module';
+import { Conversation } from '../conversation/entities/conversation.entity';
+import { Friend } from '../friend/entities/friend.entity';
 import { User } from './entities/user.entity';
-import { AuthModule } from 'src/auth/auth.module';
-import { Friend } from 'src/friend/entities/friend.entity';
-import { Conversation } from 'src/conversation/entities/conversation.entity';
+import { UsersController } from './user.controller';
+import { UsersService } from './user.service';
 
 @Module({
   imports: [

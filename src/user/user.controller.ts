@@ -1,37 +1,38 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Res,
   HttpStatus,
-  UseGuards,
+  Param,
+  Patch,
+  Post,
+  Query,
   Req,
-  UseInterceptors,
+  Res,
   UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { UsersService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { Response, Request } from 'express';
-import { response } from '../utils/response';
-import { Query } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import { LoginUserDto } from './dto/login-user.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { OAuth2Client } from 'google-auth-library';
-import { SearchUserDto } from './dto/search-user.dto';
-import { Payload } from 'src/interfaces/payload.interface';
-import { User } from 'src/decorators/user.decorator';
-import { ApiTags } from '@nestjs/swagger';
-import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
-import { createFile, getFileToBase64, getFile } from '../utils/file';
-import { TokenUserDto } from './dto/token-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import { diskStorage } from 'multer';
 import * as path from 'path';
+
+import { AuthService } from '../auth/auth.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
+import { Payload } from '../interfaces/payload.interface';
+import { createFile, getFile, getFileToBase64 } from '../utils/file';
+import { response } from '../utils/response';
+import { CreateUserDto } from './dto/create-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
+import { TokenUserDto } from './dto/token-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
+import { UsersService } from './user.service';
 
 @ApiTags('user')
 @Controller('user')

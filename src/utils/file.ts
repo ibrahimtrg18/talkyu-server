@@ -1,9 +1,10 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import * as fileType from 'file-type';
-import * as util from 'util';
-import * as mime from 'mime-types';
 import { HttpStatus } from '@nestjs/common';
+import * as fileType from 'file-type';
+import * as fs from 'fs';
+import * as mime from 'mime-types';
+import * as path from 'path';
+import * as util from 'util';
+
 import { ResponseResult } from './response';
 
 const readdir = util.promisify(fs.readdir);

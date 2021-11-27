@@ -1,26 +1,27 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
-import { FriendService } from './friend.service';
-import { CreateFriendDto } from './dto/create-friend.dto';
-import { UpdateFriendDto } from './dto/update-friend.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { response } from 'src/utils/response';
-import { User } from 'src/decorators/user.decorator';
-import { Payload } from 'src/interfaces/payload.interface';
 import { ApiTags } from '@nestjs/swagger';
-import { RequestFriendDto } from './dto/request-friend.dto';
+import { Response } from 'express';
+
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
+import { Payload } from '../interfaces/payload.interface';
+import { response } from '../utils/response';
 import { AcceptFriendDto } from './dto/accept-friend.dto';
+import { CreateFriendDto } from './dto/create-friend.dto';
+import { RequestFriendDto } from './dto/request-friend.dto';
+import { UpdateFriendDto } from './dto/update-friend.dto';
+import { FriendService } from './friend.service';
 
 @ApiTags('friend')
 @Controller('friend')

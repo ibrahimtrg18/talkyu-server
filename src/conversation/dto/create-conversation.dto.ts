@@ -1,4 +1,4 @@
-import { ConversationType } from '../interfaces/ConversationType';
+import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -8,7 +8,8 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+
+import { ConversationType } from '../interfaces/ConversationType';
 
 class UserDto {
   @IsDefined()

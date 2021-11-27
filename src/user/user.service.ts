@@ -1,18 +1,19 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Conversation } from 'src/conversation/entities/conversation.entity';
-import { isEmail } from 'src/utils/validation';
 import { Like, Repository } from 'typeorm';
+import { validate } from 'uuid';
+
+import { Conversation } from '../conversation/entities/conversation.entity';
+import { Friend } from '../friend/entities/friend.entity';
+import { comparePassword, generatePassword } from '../utils/password';
+import { ResponseResult } from '../utils/response';
+import { isEmail } from '../utils/validation';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { validate } from 'uuid';
-import { ResponseResult } from 'src/utils/response';
-import { Friend } from 'src/friend/entities/friend.entity';
-import { comparePassword, generatePassword } from '../utils/password';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {

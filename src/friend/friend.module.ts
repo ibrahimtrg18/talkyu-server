@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { FriendService } from './friend.service';
-import { FriendController } from './friend.controller';
-import { Friend } from './entities/friend.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
+
+import { User } from '../user/entities/user.entity';
+import { Friend } from './entities/friend.entity';
+import { FriendController } from './friend.controller';
+import { FriendService } from './friend.service';
 
 @Module({
   imports: [
