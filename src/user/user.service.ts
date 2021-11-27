@@ -10,12 +10,15 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { validate } from 'uuid';
 import { ResponseResult } from 'src/utils/response';
+import { Friend } from 'src/friend/entities/friend.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Friend)
+    private friendRepository: Repository<Friend>,
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
   ) {}
@@ -149,14 +152,12 @@ export class UsersService {
   }
 
   async getFriends(id: string): Promise<ResponseResult> {
-    const friends = await getConnection().query(
-      `
-      SELECT friend.friendId as id, user.name, user.email, friend.created_at, friend.updated_at FROM friend 
-        LEFT JOIN user 
-        ON user.id = friend.friendId 
-      WHERE friend.userId = ?`,
-      [id],
-    );
+    const friends = await this.friendRepository
+      .createQueryBuilder('friend')
+      .leftJoinAndSelect('friend.user', 'friendUser')
+      .leftJoinAndSelect('friend.friend', 'friendFriend')
+      .where('friendUser.id = :id', { id })
+      .getMany();
 
     return [HttpStatus.OK, `You have ${friends.length} friends!`, friends];
   }
