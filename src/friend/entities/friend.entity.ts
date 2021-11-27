@@ -1,5 +1,6 @@
 import { User } from 'src/user/entities/user.entity';
 import {
+  Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
@@ -7,16 +8,25 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export enum FriendStatus {
+  REQUEST = 'REQUEST',
+  AGREEMENT = 'AGREEMENT',
+  ACCEPT = 'ACCEPT',
+}
+
 @Entity()
 export class Friend {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.friends)
-  friend: User;
+  @Column()
+  status: FriendStatus;
 
   @ManyToOne(() => User, (user) => user.friends)
   user: User;
+
+  @ManyToOne(() => User, (user) => user.friends)
+  friend: User;
 
   @CreateDateColumn({
     type: 'timestamp',

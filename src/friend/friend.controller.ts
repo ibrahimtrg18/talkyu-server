@@ -19,6 +19,8 @@ import { response } from 'src/utils/response';
 import { User } from 'src/decorators/user.decorator';
 import { Payload } from 'src/interfaces/payload.interface';
 import { ApiTags } from '@nestjs/swagger';
+import { RequestFriendDto } from './dto/request-friend.dto';
+import { AcceptFriendDto } from './dto/accept-friend.dto';
 
 @ApiTags('friend')
 @Controller('friend')
@@ -36,6 +38,54 @@ export class FriendController {
       const [status, message, newFriend] = await this.friendService.create({
         user: user,
         ...createFriendDto,
+      });
+
+      return response(res, status, message, newFriend);
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('request')
+  async requestFriend(
+    @Res() res: Response,
+    @Body() requestFriendDto: RequestFriendDto,
+    @User() user: Payload,
+  ) {
+    try {
+      const [
+        status,
+        message,
+        newFriend,
+      ] = await this.friendService.requestFriend({
+        user: user,
+        ...requestFriendDto,
+      });
+
+      return response(res, status, message, newFriend);
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('accept')
+  async acceptFriend(
+    @Res() res: Response,
+    @Body() acceptFriendDto: AcceptFriendDto,
+    @User() user: Payload,
+  ) {
+    try {
+      const [
+        status,
+        message,
+        newFriend,
+      ] = await this.friendService.acceptFriend({
+        user: user,
+        ...acceptFriendDto,
       });
 
       return response(res, status, message, newFriend);
