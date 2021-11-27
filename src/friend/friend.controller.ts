@@ -7,12 +7,10 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req,
   HttpStatus,
   Res,
-  HttpException,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { FriendService } from './friend.service';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { UpdateFriendDto } from './dto/update-friend.dto';
@@ -35,21 +33,15 @@ export class FriendController {
     @User() user: Payload,
   ) {
     try {
-      const [err, newFriend, message] = await this.friendService.create({
+      const [status, message, newFriend] = await this.friendService.create({
         user: user,
         ...createFriendDto,
       });
 
-      return response(res, err, {
-        message: message,
-        data: newFriend,
-      });
+      return response(res, status, message, newFriend);
     } catch (e) {
       console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, {
-        message: e,
-        data: null,
-      });
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
     }
   }
 

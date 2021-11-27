@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
-import { Friend } from 'src/friend/entities/friend.entity';
 import { isEmail } from 'src/utils/validation';
 import { Like, Repository, getConnection } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -10,43 +9,45 @@ import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { validate } from 'uuid';
+import { ResponseResult } from 'src/utils/response';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Friend)
-    private friendRepository: Repository<Friend>,
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
   ) {}
 
-  async register(
-    createUserDto: CreateUserDto,
-  ): Promise<[HttpStatus, CreateUserDto & User]> {
+  async register(createUserDto: CreateUserDto): Promise<ResponseResult> {
     const isEmailExist = await this.findOneByEmail(createUserDto.email);
 
     if (isEmailExist) {
-      return [HttpStatus.CONFLICT, null];
+      return [HttpStatus.CONFLICT, 'Email is already register!', null];
     }
 
-    return [null, await this.userRepository.save(createUserDto)];
+    return [
+      HttpStatus.CREATED,
+      'Successfully register new account!',
+      await this.userRepository.save(createUserDto),
+    ];
   }
 
   async registerGoogle({
     email,
     name,
     google_open_id,
-  }): Promise<[HttpStatus, CreateUserDto & User]> {
+  }): Promise<ResponseResult> {
     const isEmailExist = await this.findOneByEmail(email);
 
     if (isEmailExist) {
-      return [HttpStatus.CONFLICT, null];
+      return [HttpStatus.CONFLICT, 'Email is already register!', null];
     }
 
     return [
-      null,
+      HttpStatus.CREATED,
+      'Successfully register new account!',
       await this.userRepository.save({
         email,
         name,
@@ -56,35 +57,45 @@ export class UsersService {
     ];
   }
 
-  async findByQuery(searchUserDto: SearchUserDto) {
+  async findByQuery(searchUserDto: SearchUserDto): Promise<ResponseResult> {
     const { q } = searchUserDto;
 
     if (validate(q)) {
-      return await this.userRepository.find({
+      const results = await this.userRepository.find({
         select: ['id', 'name', 'email', 'created_at', 'updated_at'],
         where: {
           id: q,
         },
       });
+
+      return [HttpStatus.OK, `Found ${results.length} users!`, results];
     } else if (isEmail(q)) {
-      return await this.userRepository.find({
+      const results = await this.userRepository.find({
         select: ['id', 'name', 'email', 'created_at', 'updated_at'],
         where: {
           email: q,
         },
       });
+      return [HttpStatus.OK, `Found ${results.length} users!`, results];
     } else {
-      return await this.userRepository.find({
+      const results = await this.userRepository.find({
         select: ['id', 'name', 'email', 'created_at', 'updated_at'],
         where: {
           name: Like(`%${q}%`),
         },
       });
+      return [HttpStatus.OK, `Found ${results.length} users!`, results];
     }
   }
 
-  async findOneById(id: string) {
-    return await this.userRepository.findOne(id);
+  async findOneById(id: string): Promise<ResponseResult> {
+    const user = await this.userRepository.findOne(id);
+
+    if (!user) {
+      return [HttpStatus.NOT_FOUND, `Found user!`, user];
+    }
+
+    return [HttpStatus.OK, `Found user!`, user];
   }
 
   async findOneByEmail(email: string) {
@@ -98,14 +109,14 @@ export class UsersService {
   async updateAccount(
     userId: string,
     updateUserDto: UpdateUserDto,
-  ): Promise<[HttpStatus, CreateUserDto | User]> {
+  ): Promise<ResponseResult> {
     const isPasswordMatch = await this.userRepository.findOne({
       id: userId,
       password: updateUserDto.confirmPassword,
     });
 
     if (!isPasswordMatch) {
-      return [HttpStatus.FORBIDDEN, null];
+      return [HttpStatus.FORBIDDEN, 'Password is incorrect!', null];
     }
 
     const user = await this.userRepository.findOne({
@@ -113,25 +124,32 @@ export class UsersService {
     });
 
     if (!user) {
-      return [HttpStatus.NOT_FOUND, null];
+      return [HttpStatus.NOT_FOUND, "Sorry, We can't find your account!", null];
     }
 
     const { confirmPassword, newPassword, ...rest } = updateUserDto;
 
+    // changes password
     if (newPassword) {
       const { password, ...updatedUser } = await this.userRepository.save({
         ...user,
         ...rest,
         password: newPassword,
       });
-      return [null, updatedUser];
+
+      return [HttpStatus.OK, 'Successfully changes password!', updatedUser];
     }
 
-    return [null, await this.userRepository.save({ ...user, ...rest })];
+    // changes data
+    return [
+      HttpStatus.OK,
+      'Successfully changes password!',
+      await this.userRepository.save({ ...user, ...rest }),
+    ];
   }
 
-  async getFriends(id: string) {
-    return await getConnection().query(
+  async getFriends(id: string): Promise<ResponseResult> {
+    const friends = await getConnection().query(
       `
       SELECT friend.friendId as id, user.name, user.email, friend.created_at, friend.updated_at FROM friend 
         LEFT JOIN user 
@@ -139,13 +157,21 @@ export class UsersService {
       WHERE friend.userId = ?`,
       [id],
     );
+
+    return [HttpStatus.OK, `You have ${friends.length} friends!`, friends];
   }
 
-  async getConversations(id: string) {
-    return await this.conversationRepository
+  async getConversations(id: string): Promise<ResponseResult> {
+    const conversations = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.users', 'user')
       .where('user.id = :id', { id })
       .getMany();
+
+    return [
+      HttpStatus.OK,
+      `You have ${conversations.length} conversations!`,
+      conversations,
+    ];
   }
 }

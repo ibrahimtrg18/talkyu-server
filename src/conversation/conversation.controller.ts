@@ -28,40 +28,28 @@ export class ConversationController {
     @Body() createConversationDto: CreateConversationDto,
     @User() user: any,
   ) {
-    const [error, conversation] = await this.conversationService.create({
+    const [
+      status,
+      message,
+      conversation,
+    ] = await this.conversationService.create({
       ...createConversationDto,
       users: [...createConversationDto.users, user],
     });
 
-    if (error) {
-      return response(res, error, {
-        message: 'Please, check user again!',
-        data: conversation,
-      });
-    } else {
-      return response(res, HttpStatus.CREATED, {
-        message: 'Successfully create conversation!',
-        data: conversation,
-      });
-    }
+    return response(res, status, message, conversation);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findById(@Res() res: Response, @Param('id') id: string) {
-    const [error, conversation] = await this.conversationService.findById(id);
+    const [
+      status,
+      message,
+      conversation,
+    ] = await this.conversationService.findById(id);
 
-    if (error) {
-      return response(res, error, {
-        message: 'Please, check user again!',
-        data: conversation,
-      });
-    }
-
-    return response(res, HttpStatus.OK, {
-      message: 'Successfully create conversation!',
-      data: conversation,
-    });
+    return response(res, status, message, conversation);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -71,20 +59,11 @@ export class ConversationController {
     @Param('id') id: string,
   ) {
     const [
-      error,
+      status,
+      message,
       conversationChat,
     ] = await this.conversationService.getChatsById(id);
 
-    if (error) {
-      return response(res, error, {
-        message: 'Please, check user again!',
-        data: conversationChat,
-      });
-    } else {
-      return response(res, HttpStatus.CREATED, {
-        message: 'Successfully create conversation!',
-        data: conversationChat,
-      });
-    }
+    return response(res, status, message, conversationChat);
   }
 }

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   LoginGoogleUserDto,
@@ -6,8 +6,8 @@ import {
   LoginUserDto,
 } from 'src/user/dto/login-user.dto';
 import { UsersService } from 'src/user/user.service';
+import { ResponseResult } from 'src/utils/response';
 import { Payload } from '../interfaces/payload.interface';
-import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +17,9 @@ export class AuthService {
   ) {}
 
   async validateUser(payload: Payload): Promise<Payload> {
-    const user = await this.userService.findOneById(payload.id);
+    const [error, message, user] = await this.userService.findOneById(
+      payload.id,
+    );
     if (user) {
       const { password, ...result } = user;
       return result;
@@ -27,17 +29,18 @@ export class AuthService {
 
   async login(
     loginUserDto: LoginUserDto | LoginGoogleUserDto,
-  ): Promise<[HttpStatus, { id: string; access_token: string }]> {
+  ): Promise<ResponseResult> {
     const user = await this.userService.findByLogin(loginUserDto);
 
     if (!user) {
-      return [HttpStatus.UNAUTHORIZED, null];
+      return [HttpStatus.UNAUTHORIZED, 'Email and Password incorrect!', null];
     }
 
     const payload = { id: user.id, email: user.email };
 
     return [
-      null,
+      HttpStatus.OK,
+      'Successfully Login!',
       {
         id: user.id,
         access_token: this.jwtService.sign(payload),
@@ -45,21 +48,21 @@ export class AuthService {
     ];
   }
 
-  async token(
-    loginUserDto: LoginToken,
-  ): Promise<[HttpStatus, { id: string; access_token: string }]> {
+  async token(loginUserDto: LoginToken): Promise<ResponseResult> {
     const { id } = await this.jwtService.verify(loginUserDto.token);
+    console.log(id);
 
-    const user = await this.userService.findOneById(id);
+    const [error, message, user] = await this.userService.findOneById(id);
 
     if (!user) {
-      return [HttpStatus.UNAUTHORIZED, null];
+      return [HttpStatus.UNAUTHORIZED, 'Invalid Token!', null];
     }
 
     const payload = { id: user.id, email: user.email };
 
     return [
-      null,
+      HttpStatus.UNAUTHORIZED,
+      'Successfully get token!',
       {
         id: user.id,
         access_token: this.jwtService.sign(payload),
