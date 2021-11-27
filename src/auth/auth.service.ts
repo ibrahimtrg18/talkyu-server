@@ -1,10 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  LoginGoogleUserDto,
-  LoginToken,
-  LoginUserDto,
-} from 'src/user/dto/login-user.dto';
+import { LoginToken, LoginUserDto } from 'src/user/dto/login-user.dto';
 import { UsersService } from 'src/user/user.service';
 import { ResponseResult } from 'src/utils/response';
 import { Payload } from '../interfaces/payload.interface';
@@ -27,9 +23,7 @@ export class AuthService {
     return null;
   }
 
-  async login(
-    loginUserDto: LoginUserDto | LoginGoogleUserDto,
-  ): Promise<ResponseResult> {
+  async login(loginUserDto: LoginUserDto): Promise<ResponseResult> {
     const user = await this.userService.findByLogin(loginUserDto);
 
     if (!user) {

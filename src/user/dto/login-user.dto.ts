@@ -9,14 +9,7 @@ export class LoginUserDto {
   @IsDefined()
   @IsNotEmpty()
   @IsString()
-  password: string;
-}
-
-export class LoginGoogleUserDto {
-  @IsDefined()
-  @IsNotEmpty()
-  @IsString()
-  email: string;
+  password?: string;
 }
 
 export class LoginToken {

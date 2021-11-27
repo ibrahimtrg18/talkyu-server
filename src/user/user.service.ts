@@ -2,15 +2,17 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { isEmail } from 'src/utils/validation';
-import { Like, Repository, getConnection } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { validate } from 'uuid';
 import { ResponseResult } from 'src/utils/response';
 import { Friend } from 'src/friend/entities/friend.entity';
+import { comparePassword, generatePassword } from '../utils/password';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
@@ -21,7 +23,10 @@ export class UsersService {
     private friendRepository: Repository<Friend>,
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
+    private configService: ConfigService,
   ) {}
+
+  SALT = this.configService.get('SALT');
 
   async register(createUserDto: CreateUserDto): Promise<ResponseResult> {
     const isEmailExist = await this.findOneByEmail(createUserDto.email);
@@ -30,10 +35,15 @@ export class UsersService {
       return [HttpStatus.CONFLICT, 'Email is already register!', null];
     }
 
+    const { password, ...restCreateUserDto } = createUserDto;
+
     return [
       HttpStatus.CREATED,
       'Successfully register new account!',
-      await this.userRepository.save(createUserDto),
+      await this.userRepository.save({
+        ...restCreateUserDto,
+        password: await generatePassword(password, parseInt(this.SALT)),
+      }),
     ];
   }
 
@@ -105,8 +115,20 @@ export class UsersService {
     return await this.userRepository.findOne({ email });
   }
 
-  async findByLogin(loginUserDto: LoginUserDto | LoginGoogleUserDto) {
-    return await this.userRepository.findOne(loginUserDto);
+  async findByLogin(loginUserDto: LoginUserDto) {
+    const { password, ...restLoginUserDto } = loginUserDto;
+
+    if (password) {
+      const user = await this.userRepository.findOne({ ...restLoginUserDto });
+      const isMatch = await comparePassword(password, user.password);
+      if (isMatch) {
+        return user;
+      }
+
+      return null;
+    }
+
+    return null;
   }
 
   async updateAccount(
