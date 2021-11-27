@@ -12,7 +12,9 @@ import { FriendModule } from './friend/friend.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot(),
     UsersModule,
     AuthModule,
