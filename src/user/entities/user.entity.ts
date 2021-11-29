@@ -28,6 +28,9 @@ export class User {
   @Column()
   phoneNumber: string;
 
+  @Column()
+  avatar: string;
+
   @Column({ nullable: true, default: 0 })
   online: boolean;
 

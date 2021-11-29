@@ -188,7 +188,7 @@ export class UsersController {
   @Get('account')
   async account(@User() user: Payload, @Res() res: Response) {
     try {
-      response(res, HttpStatus.OK, 'Successfully data account!', user);
+      return response(res, HttpStatus.OK, 'Successfully data account!', user);
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
@@ -205,9 +205,14 @@ export class UsersController {
     try {
       const { file } = updateUserAvatarDto;
 
-      createFile(file, { prefix: ['user', 'avatar'], name: user.id });
+      const filename = await createFile(file, {
+        prefix: ['user', 'avatar'],
+        name: `${user.id}-${Date.now()}`,
+      });
 
-      response(res, HttpStatus.OK, 'Successfully update avatar!', null);
+      await this.userService.updateAvatar(user.id, filename);
+
+      return response(res, HttpStatus.OK, 'Successfully update avatar!', null);
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
@@ -220,9 +225,13 @@ export class UsersController {
     FileInterceptor('avatar', {
       storage: diskStorage({
         destination: './public/uploads/user/avatar/',
-        filename: function (req: Request, file, cb) {
+        filename: async function (req: Request, file, cb) {
           const { id } = req.user as Payload;
-          cb(null, `${id}${path.extname(file.originalname)}`);
+          const filename = `${id}-${Date.now()}${path.extname(
+            file.originalname,
+          )}`;
+          await this.userService.updateAvatar(id, filename);
+          cb(null, filename);
         },
       }),
       fileFilter: function (req: Request, file, cb) {
@@ -243,7 +252,7 @@ export class UsersController {
   ) {
     try {
       if (!file) {
-        response(
+        return response(
           res,
           HttpStatus.BAD_REQUEST,
           "File key: 'avatar' is required!",

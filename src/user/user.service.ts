@@ -174,6 +174,19 @@ export class UsersService {
     ];
   }
 
+  async updateAvatar(id: string, filename: string): Promise<ResponseResult> {
+    const user = await this.userRepository.findOne(id);
+
+    return [
+      HttpStatus.OK,
+      'Successfully changes password!',
+      await this.userRepository.save({
+        ...user,
+        avatar: filename,
+      }),
+    ];
+  }
+
   async getFriends(id: string): Promise<ResponseResult> {
     const friends = await this.friendRepository
       .createQueryBuilder('friend')

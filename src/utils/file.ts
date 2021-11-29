@@ -18,13 +18,15 @@ export const createFile = async (base64: string, { prefix, name }: Path) => {
   const cleanBase64 = base64.split(',')[1];
   const buffer = Buffer.from(cleanBase64, 'base64');
   const file = await fileType.fromBuffer(buffer);
-  return fs.writeFileSync(
+  fs.writeFileSync(
     path.join(
       path.resolve('./'),
       ...['public', ...prefix, `${name}.${file.ext}`],
     ),
     buffer,
   );
+
+  return name;
 };
 
 export const getFile = async ({
