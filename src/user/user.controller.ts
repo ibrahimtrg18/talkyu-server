@@ -188,7 +188,7 @@ export class UsersController {
   @Get('account')
   async account(@User() user: Payload, @Res() res: Response) {
     try {
-      response(res, HttpStatus.OK, 'Successfully data account!', user);
+      return response(res, HttpStatus.OK, 'Successfully data account!', user);
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
@@ -207,7 +207,7 @@ export class UsersController {
 
       createFile(file, { prefix: ['user', 'avatar'], name: user.id });
 
-      response(res, HttpStatus.OK, 'Successfully update avatar!', null);
+      return response(res, HttpStatus.OK, 'Successfully update avatar!', null);
     } catch (e) {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
@@ -222,7 +222,7 @@ export class UsersController {
         destination: './public/uploads/user/avatar/',
         filename: function (req: Request, file, cb) {
           const { id } = req.user as Payload;
-          cb(null, `${id}${path.extname(file.originalname)}`);
+          cb(null, `${id}-${Date.now()}${path.extname(file.originalname)}`);
         },
       }),
       fileFilter: function (req: Request, file, cb) {
@@ -240,10 +240,11 @@ export class UsersController {
   async uploadAvatar(
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
+    @User() user: Payload,
   ) {
     try {
       if (!file) {
-        response(
+        return response(
           res,
           HttpStatus.BAD_REQUEST,
           "File key: 'avatar' is required!",
@@ -255,6 +256,8 @@ export class UsersController {
         prefix: ['uploads', 'user', 'avatar'],
         name: path.basename(file.filename, path.extname(file.filename)),
       });
+
+      await this.userService.updateAvatar(user.id, file.filename);
 
       return response(res, status, message, {
         path: path.normalize(file.path.replace('public', '')),
@@ -270,17 +273,19 @@ export class UsersController {
   async getAvatar(@Res() res: Response, @Query() query: any) {
     try {
       const { userId, type } = query;
+      const [status, error, user] = await this.userService.findOneById(userId);
+
       if (type && type.toLowerCase() === 'base64') {
         const [status, message, base64] = await getFileToBase64({
           prefix: ['uploads', 'user', 'avatar'],
-          name: userId,
+          name: path.basename(user.avatar, path.extname(user.avatar)),
         });
 
         return response(res, status, message, base64);
       } else {
         const [status, message, file, contentType] = await getFile({
           prefix: ['uploads', 'user', 'avatar'],
-          name: userId,
+          name: path.basename(user.avatar, path.extname(user.avatar)),
         });
 
         if (!file) {
