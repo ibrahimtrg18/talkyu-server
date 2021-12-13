@@ -44,7 +44,12 @@ export class ChatService {
     return `This action updates a #${id} chat`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+  async remove(removeChatDto: RemoveChatDto): Promise<ResponseResult> {
+    const deleteChat = await this.chatRepository.delete({
+      id: removeChatDto.chat.id,
+      user: removeChatDto.user,
+    });
+
+    return [HttpStatus.OK, 'Successfully Send message!', deleteChat];
   }
 }

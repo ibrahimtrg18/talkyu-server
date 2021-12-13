@@ -49,8 +49,17 @@ export class ChatGateway {
     return this.chatService.update(updateChatDto.id, updateChatDto);
   }
 
+  @UseGuards(WsGuard)
   @SubscribeMessage('removeChat')
-  remove(@MessageBody() id: number) {
-    return this.chatService.remove(id);
+  async remove(@MessageBody() removeChatDto: RemoveChatDto) {
+    try {
+      const [status, message, chat] = await this.chatService.remove(
+        removeChatDto,
+      );
+      return this.server.emit('removeChat', { status, message, data: chat });
+    } catch (err) {
+      console.log(err);
+      return this.server.emit('removeChat', err);
+    }
   }
 }
