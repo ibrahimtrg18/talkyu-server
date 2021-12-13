@@ -10,6 +10,7 @@ import { Server } from 'socket.io';
 import { WsGuard } from '../auth/ws.guard';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { RemoveChatDto } from './dto/remove-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 
 @WebSocketGateway()
@@ -23,10 +24,10 @@ export class ChatGateway {
   @SubscribeMessage('createChat')
   async create(@MessageBody() createChatDto: CreateChatDto) {
     try {
-      const { conversation, ...chat } = await this.chatService.create(
+      const [status, message, chat] = await this.chatService.create(
         createChatDto,
       );
-      return this.server.emit('createChat', chat);
+      return this.server.emit('createChat', { status, message, data: chat });
     } catch (err) {
       console.log(err);
       return this.server.emit('createChat', err);

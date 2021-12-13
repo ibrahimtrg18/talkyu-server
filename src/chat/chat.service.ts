@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Conversation } from '../conversation/entities/conversation.entity';
+import { ResponseResult } from '../utils/response';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { RemoveChatDto } from './dto/remove-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { Chat } from './entities/chat.entity';
 
@@ -16,11 +18,18 @@ export class ChatService {
     private conversationRepository: Repository<Conversation>,
   ) {}
 
-  create(createChatDto: CreateChatDto): Promise<Chat> {
-    const conversation = this.conversationRepository.findOne(
+  async create(createChatDto: CreateChatDto): Promise<ResponseResult> {
+    const conversation = await this.conversationRepository.findOne(
       createChatDto.conversation.id,
     );
-    return this.chatRepository.save({ ...createChatDto, ...conversation });
+    return [
+      HttpStatus.OK,
+      'Successfully Send message!',
+      await this.chatRepository.save({
+        conversation: conversation,
+        ...createChatDto,
+      }),
+    ];
   }
 
   findAll() {
