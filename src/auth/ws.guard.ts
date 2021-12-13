@@ -23,14 +23,16 @@ export class WsGuard implements CanActivate {
           reject('Invalid Bearer');
         }
         const decoded = jwt.verify(bearerToken, jwtConstants.secret) as Payload;
-        return this.userService.findOneById(decoded.id).then((user) => {
-          if (user) {
-            context.switchToWs().getData().user = user;
-            resolve(true);
-          } else {
-            reject(false);
-          }
-        });
+        return this.userService
+          .findOneById(decoded.id)
+          .then(([status, message, user]) => {
+            if (user) {
+              context.switchToWs().getData().user = user;
+              resolve(true);
+            } else {
+              reject(false);
+            }
+          });
       });
     } catch (e) {
       console.error(e);
