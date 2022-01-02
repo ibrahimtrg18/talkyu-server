@@ -25,10 +25,10 @@ export class User {
   @Column()
   password?: string;
 
-  @Column()
+  @Column({ nullable: true, default: null })
   phoneNumber: string;
 
-  @Column()
+  @Column({ nullable: true, default: null })
   avatar: string;
 
   @Column({ nullable: true, default: 0 })
