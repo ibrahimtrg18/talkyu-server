@@ -109,6 +109,7 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
+      // register account with google
       const [status, message, newUser] = await this.userService.registerGoogle({
         email: payload.email,
         name: payload.name,
@@ -116,17 +117,13 @@ export class UsersController {
       });
 
       if (status === HttpStatus.CONFLICT) {
-        const [status, message, token] = await this.authService.login({
+        const [status, message, token] = await this.authService.loginGoogle({
           email: payload.email,
         });
 
         return response(res, status, message, token);
       } else {
-        const [status, message, token] = await this.authService.login({
-          email: newUser.email,
-        });
-
-        return response(res, status, message, token);
+        return response(res, status, message, null);
       }
     } catch (e) {
       console.error(e);

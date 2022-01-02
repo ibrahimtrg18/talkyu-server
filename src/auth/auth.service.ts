@@ -43,6 +43,25 @@ export class AuthService {
     ];
   }
 
+  async loginGoogle(loginUserDto: LoginUserDto): Promise<ResponseResult> {
+    const user = await this.userService.findOneByEmail(loginUserDto.email);
+
+    if (!user) {
+      return [HttpStatus.UNAUTHORIZED, 'Email and Password incorrect!', null];
+    }
+
+    const payload = { id: user.id, email: user.email };
+
+    return [
+      HttpStatus.OK,
+      'Successfully Login!',
+      {
+        id: user.id,
+        access_token: this.jwtService.sign(payload),
+      },
+    ];
+  }
+
   async token(loginUserDto: LoginToken): Promise<ResponseResult> {
     const { id } = await this.jwtService.verify(loginUserDto.token);
     console.log(id);
