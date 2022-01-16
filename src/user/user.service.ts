@@ -203,7 +203,7 @@ export class UsersService {
     const conversations = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.users', 'user')
-      .where('user.id = :id', { id })
+      .where('user.id != :id', { id })
       .getMany();
 
     return [
