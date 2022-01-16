@@ -202,7 +202,12 @@ export class UsersController {
     try {
       const { file } = updateUserAvatarDto;
 
-      createFile(file, { prefix: ['user', 'avatar'], name: user.id });
+      const filename = await createFile(file, {
+        prefix: ['uploads', 'user', 'avatar'],
+        name: `${user.id}-${Date.now()}`,
+      });
+
+      await this.userService.updateAvatar(user.id, filename);
 
       return response(res, HttpStatus.OK, 'Successfully update avatar!', null);
     } catch (e) {
@@ -291,7 +296,6 @@ export class UsersController {
 
         res.set({
           'Content-Type': contentType,
-          'Content-Disposition': 'attachment; filename="package.json"',
         });
         return file.pipe(res);
       }
