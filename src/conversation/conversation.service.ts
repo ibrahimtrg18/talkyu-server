@@ -63,7 +63,7 @@ export class ConversationService {
     }
 
     return [
-      HttpStatus.NOT_FOUND,
+      HttpStatus.OK,
       'Successfully get conversation!',
       await this.conversationRepository.findOne({
         relations: ['users'],
