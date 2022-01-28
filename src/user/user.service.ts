@@ -199,17 +199,28 @@ export class UsersService {
     return [HttpStatus.OK, `You have ${friends.length} friends!`, friends];
   }
 
-  async getConversations(id: string): Promise<ResponseResult> {
-    const conversations = await this.conversationRepository
+  async getConversations(userId: string): Promise<ResponseResult> {
+    const userConversation = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.conversations', 'conversation')
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    const conversations = userConversation.conversations;
+
+    if (conversations.length === 0) {
+      return [HttpStatus.OK, `You have 0 conversations!`, []];
+    }
+
+    const users = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.users', 'user')
-      .where('user.id != :id', { id })
+      .where('user.id != :userId', { userId })
+      .andWhere('conversation.id IN(:conversationId)', {
+        conversationId: conversations.map((conversation) => conversation.id),
+      })
       .getMany();
 
-    return [
-      HttpStatus.OK,
-      `You have ${conversations.length} conversations!`,
-      conversations,
-    ];
+    return [HttpStatus.OK, `You have ${users.length} conversations!`, users];
   }
 }

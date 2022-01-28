@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -59,6 +60,7 @@ export class User {
   @OneToMany(() => User, (user) => user.friends)
   friends: Friend[];
 
-  @ManyToMany(() => User, (user) => user.conversations)
+  @ManyToMany(() => Conversation, (conversation) => conversation.users)
+  @JoinTable({ name: 'user_conversation' })
   conversations: Conversation[];
 }

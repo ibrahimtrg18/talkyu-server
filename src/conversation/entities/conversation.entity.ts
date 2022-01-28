@@ -21,13 +21,6 @@ export class Conversation {
   @Column()
   type: ConversationType;
 
-  @OneToMany(() => Chat, (chat) => chat.conversation)
-  chats: Chat[];
-
-  @ManyToMany(() => User, (user) => user.conversations)
-  @JoinTable()
-  users: User[];
-
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
@@ -40,4 +33,10 @@ export class Conversation {
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   public updated_at: Date;
+
+  @OneToMany(() => Chat, (chat) => chat.conversation)
+  chats: Chat[];
+
+  @ManyToMany(() => User, (user) => user.conversations)
+  users: User[];
 }
