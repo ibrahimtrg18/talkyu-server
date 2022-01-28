@@ -21,7 +21,7 @@ export class ConversationService {
     createConversationDto: CreateConversationDto,
   ): Promise<ResponseResult> {
     let isUsersHaveNotFound = false;
-    const user = await Promise.all(
+    const users = await Promise.all(
       createConversationDto.users.map(async (user) => {
         const isExist = await this.userRepository.findOne(user.id);
 
@@ -45,7 +45,7 @@ export class ConversationService {
         'Successfully create conversation!',
         await this.conversationRepository.save({
           ...createConversationDto,
-          users: user,
+          users: users,
         }),
       ];
     }
