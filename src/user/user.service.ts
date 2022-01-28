@@ -121,6 +121,10 @@ export class UsersService {
 
     if (password) {
       const user = await this.userRepository.findOne({ ...restLoginUserDto });
+      if (!user) {
+        return null;
+      }
+
       const isMatch = await comparePassword(password, user.password);
       if (isMatch) {
         return user;
