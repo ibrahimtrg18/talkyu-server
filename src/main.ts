@@ -1,9 +1,3 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  ValidationError,
-  ValidationPipe,
-} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -12,6 +6,7 @@ import * as morgan from 'morgan';
 import * as path from 'path';
 
 import { AppModule } from './app.module';
+import { ValidationPipe } from './validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,24 +23,7 @@ async function bootstrap() {
   SwaggerModule.setup('/openapi', app, document);
 
   app.use('/api', express.static(path.join(__dirname, '..', 'public')));
-  app.useGlobalPipes(
-    new ValidationPipe({
-      exceptionFactory: (errors: ValidationError[]) => {
-        let errorObj = {};
-        errors.forEach((error) => {
-          errorObj = {
-            ...errorObj,
-            [error.property]: error.constraints,
-          };
-        });
-        return new BadRequestException({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Object Transfer Data has errors',
-          error: errorObj,
-        });
-      },
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe());
 
   console.log(configService.get('PORT'));
 
