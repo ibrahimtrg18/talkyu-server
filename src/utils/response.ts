@@ -19,5 +19,13 @@ export const response = (
   message: string,
   data: any,
 ) => {
+  if (!res) {
+    return {
+      status,
+      message,
+      data,
+    };
+  }
+
   return res.status(status).json({ statusCode: res.statusCode, message, data });
 };

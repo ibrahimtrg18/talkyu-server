@@ -10,13 +10,21 @@ import {
 import { Conversation } from '../../conversation/entities/conversation.entity';
 import { User } from '../../user/entities/user.entity';
 
+export enum ChatType {
+  TEXT = 'TEXT',
+  FILE = 'FILE',
+}
+
 @Entity()
 export class Chat {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column('simple-json')
+  message: any;
+
   @Column()
-  message: string;
+  type: ChatType;
 
   @ManyToOne(() => User, (user) => user.conversations)
   user: User;

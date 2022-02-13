@@ -8,6 +8,7 @@ import {
 import { Server } from 'socket.io';
 
 import { WsGuard } from '../auth/ws.guard';
+import { Event } from '../decorators/event.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { RemoveChatDto } from './dto/remove-chat.dto';
@@ -22,6 +23,7 @@ export class ChatGateway {
 
   @UseGuards(WsGuard)
   @SubscribeMessage('createChat')
+  @Event('createChat')
   async create(@MessageBody() createChatDto: CreateChatDto) {
     try {
       const [status, message, chat] = await this.chatService.create(
