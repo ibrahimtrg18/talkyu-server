@@ -354,9 +354,11 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOneById(@Res() res: Response, @Param('id') id: string) {
+  async userById(@Res() res: Response, @Param('id') id: string) {
     try {
-      return this.userService.findOneById(id);
+      const [status, message, user] = await this.userService.findOneById(id);
+
+      return response(res, status, message, user);
     } catch (e) {
       console.error(e);
 
