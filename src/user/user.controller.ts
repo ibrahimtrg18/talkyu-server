@@ -27,7 +27,7 @@ import { Payload } from '../interfaces/payload.interface';
 import { createFile, getFile, getFileToBase64 } from '../utils/file';
 import { response } from '../utils/response';
 import { CreateUserDto } from './dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
+import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { TokenUserDto } from './dto/token-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -76,6 +76,16 @@ export class UsersController {
       const client = new OAuth2Client({
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri: process.env.GOOGLE_REDIRECT_URI,
+        forceRefreshOnFailure: true,
+      });
+      client.generateAuthUrl({
+        access_type: 'offline',
+        scope: [
+          'https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'openid',
+        ],
       });
       const ticket = await client.verifyIdToken({
         idToken: req.headers['token'] as string,
@@ -97,14 +107,35 @@ export class UsersController {
   }
 
   @Post('google/login')
-  async loginGoogle(@Req() req: Request, @Res() res: Response) {
+  async loginGoogle(
+    @Req() req: Request,
+    @Body() loginGoogleUserDto: LoginGoogleUserDto,
+    @Res() res: Response,
+  ) {
     try {
       const client = new OAuth2Client({
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri: process.env.GOOGLE_REDIRECT_URI,
       });
+      client.generateAuthUrl({
+        access_type: 'offline',
+        scope: [
+          'https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'openid',
+        ],
+      });
+
+      const r = await client.getToken(loginGoogleUserDto.serverAuthCode);
+
+      if (!r.tokens.access_token) {
+        console.error(r.res.statusText);
+        return response(res, r.res.status, r.res.statusText, null);
+      }
+
       const ticket = await client.verifyIdToken({
-        idToken: req.headers['token'] as string,
+        idToken: r.tokens.id_token,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
@@ -117,13 +148,18 @@ export class UsersController {
       });
 
       if (status === HttpStatus.CONFLICT) {
-        const [status, message, token] = await this.authService.loginGoogle({
+        const [status, message, user] = await this.authService.loginGoogle({
           email: payload.email,
+          google_open_id: payload.sub,
         });
 
-        return response(res, status, message, token);
+        return response(res, status, message, user);
       } else {
-        return response(res, status, message, null);
+        const [status, message, user] = await this.authService.loginGoogle({
+          email: payload.email,
+          google_open_id: payload.sub,
+        });
+        return response(res, status, message, user);
       }
     } catch (e) {
       console.error(e);

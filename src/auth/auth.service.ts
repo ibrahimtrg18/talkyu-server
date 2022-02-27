@@ -43,8 +43,11 @@ export class AuthService {
     ];
   }
 
-  async loginGoogle(loginUserDto: LoginUserDto): Promise<ResponseResult> {
-    const user = await this.userService.findOneByEmail(loginUserDto.email);
+  async loginGoogle({ email, google_open_id }): Promise<ResponseResult> {
+    const user = await this.userService.findByGoogleAccount(
+      email,
+      google_open_id,
+    );
 
     if (!user) {
       return [HttpStatus.UNAUTHORIZED, 'Email and Password incorrect!', null];

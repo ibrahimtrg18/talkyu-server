@@ -18,3 +18,15 @@ export class LoginToken {
   @IsString()
   token: string;
 }
+
+export class LoginGoogleUserDto {
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  idToken: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  serverAuthCode: string;
+}

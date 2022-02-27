@@ -136,6 +136,13 @@ export class UsersService {
     return null;
   }
 
+  async findByGoogleAccount(email: string, google_open_id: string) {
+    return this.userRepository.findOne({
+      email,
+      google_open_id,
+    });
+  }
+
   async updateAccount(
     userId: string,
     updateUserDto: UpdateUserDto,
