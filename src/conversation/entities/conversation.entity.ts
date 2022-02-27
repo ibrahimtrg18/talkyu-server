@@ -21,6 +21,9 @@ export class Conversation {
   @Column()
   type: ConversationType;
 
+  @Column({ type: 'simple-json', default: null })
+  lastMessage: any;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',

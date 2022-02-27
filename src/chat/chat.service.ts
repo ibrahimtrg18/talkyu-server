@@ -22,6 +22,12 @@ export class ChatService {
     const conversation = await this.conversationRepository.findOne(
       createChatDto.conversation.id,
     );
+
+    await this.conversationRepository.update(conversation.id, {
+      updated_at: new Date(),
+      lastMessage: createChatDto.message,
+    });
+
     return [
       HttpStatus.OK,
       'Successfully Send message!',
