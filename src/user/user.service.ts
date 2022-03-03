@@ -1,11 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { validate } from 'uuid';
 
 import { Conversation } from '../conversation/entities/conversation.entity';
-import { Friend } from '../friend/entities/friend.entity';
+import { Friend, FriendStatus } from '../friend/entities/friend.entity';
 import { comparePassword, generatePassword } from '../utils/password';
 import { ResponseResult } from '../utils/response';
 import { isEmail } from '../utils/validation';
@@ -72,7 +72,7 @@ export class UsersService {
   }
 
   async findByQuery(searchUserDto: SearchUserDto): Promise<ResponseResult> {
-    const { q } = searchUserDto;
+    const { user, q, offset = 0, limit = 10 } = searchUserDto;
 
     if (validate(q)) {
       const results = await this.userRepository.find({
@@ -80,6 +80,8 @@ export class UsersService {
         where: {
           id: q,
         },
+        skip: offset,
+        take: limit,
       });
 
       return [HttpStatus.OK, `Found ${results.length} users!`, results];
@@ -89,15 +91,36 @@ export class UsersService {
         where: {
           email: q,
         },
+        skip: offset,
+        take: limit,
       });
       return [HttpStatus.OK, `Found ${results.length} users!`, results];
     } else {
-      const results = await this.userRepository.find({
-        select: ['id', 'name', 'email', 'created_at', 'updated_at'],
-        where: {
-          name: Like(`%${q}%`),
-        },
-      });
+      const results = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect(
+          'user.friends',
+          'friend',
+          'friend.friendId = :userId',
+          {
+            userId: user.id,
+            status: FriendStatus.ACCEPT,
+          },
+        )
+        .where('user.id != :userId', { userId: user.id })
+        .loadRelationCountAndMap(
+          'user.total_friends',
+          'user.friends',
+          'total_friends',
+          (qb) =>
+            qb.where('total_friends.status = :status', {
+              status: FriendStatus.ACCEPT,
+            }),
+        )
+        .skip(offset)
+        .limit(limit)
+        .getMany();
+
       return [HttpStatus.OK, `Found ${results.length} users!`, results];
     }
   }

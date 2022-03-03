@@ -23,6 +23,8 @@ export class Friend {
   @Column()
   status: FriendStatus;
 
+  total_friends: number;
+
   @ManyToOne(() => User, (user) => user.friends)
   user: User;
 

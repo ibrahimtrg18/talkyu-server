@@ -57,8 +57,10 @@ export class User {
   })
   updated_at: Date;
 
-  @OneToMany(() => User, (user) => user.friends)
+  @OneToMany(() => Friend, (friend) => friend.user)
   friends: Friend[];
+
+  total_friends: number;
 
   @ManyToMany(() => Conversation, (conversation) => conversation.users)
   @JoinTable({ name: 'user_conversation' })

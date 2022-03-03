@@ -374,12 +374,18 @@ export class UsersController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('search')
-  async search(@Res() res: Response, @Query() searchUserDto: SearchUserDto) {
+  async search(
+    @User() user: Payload,
+    @Res() res: Response,
+    @Query() searchUserDto: SearchUserDto,
+  ) {
     try {
-      const [status, message, results] = await this.userService.findByQuery(
-        searchUserDto,
-      );
+      const [status, message, results] = await this.userService.findByQuery({
+        user,
+        ...searchUserDto,
+      });
 
       return response(res, status, message, results);
     } catch (e) {
