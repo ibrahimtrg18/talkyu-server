@@ -9,6 +9,7 @@ import { ChatGateway } from './chat.gateway';
 import { ChatModule } from './chat/chat.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { FriendModule } from './friend/friend.module';
+import { PostModule } from './post/post.module';
 import { UsersModule } from './user/user.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersModule } from './user/user.module';
     ConversationModule,
     ChatModule,
     FriendModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
