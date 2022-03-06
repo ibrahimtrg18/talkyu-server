@@ -11,6 +11,7 @@ import {
 
 import { Conversation } from '../../conversation/entities/conversation.entity';
 import { Friend } from '../../friend/entities/friend.entity';
+import { Post } from '../../post/entities/post.entity';
 
 @Entity()
 export class User {
@@ -56,6 +57,13 @@ export class User {
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updated_at: Date;
+
+  @OneToMany(() => Post, (post) => post.user)
+  posts: Post[];
+
+  @ManyToMany(() => Post, (post) => post.like_users)
+  @JoinTable({ name: 'user_likes' })
+  like_posts: Post[];
 
   @OneToMany(() => Friend, (friend) => friend.user)
   friends: Friend[];
