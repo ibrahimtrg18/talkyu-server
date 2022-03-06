@@ -395,6 +395,21 @@ export class UsersController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('post')
+  async getPostByCurrentUser(@User() user: Payload, @Res() res: Response) {
+    try {
+      const [status, message, results] = await this.userService.getPosts(
+        user.id,
+      );
+
+      return response(res, status, message, results);
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
+  }
+
   @Get(':id')
   async userById(@Res() res: Response, @Param('id') id: string) {
     try {

@@ -6,6 +6,7 @@ import { validate } from 'uuid';
 
 import { Conversation } from '../conversation/entities/conversation.entity';
 import { Friend, FriendStatus } from '../friend/entities/friend.entity';
+import { Post } from '../post/entities/post.entity';
 import { comparePassword, generatePassword } from '../utils/password';
 import { ResponseResult } from '../utils/response';
 import { isEmail } from '../utils/validation';
@@ -24,6 +25,8 @@ export class UsersService {
     private friendRepository: Repository<Friend>,
     @InjectRepository(Conversation)
     private conversationRepository: Repository<Conversation>,
+    @InjectRepository(Post)
+    private postRepository: Repository<Post>,
     private configService: ConfigService,
   ) {}
 
@@ -256,5 +259,17 @@ export class UsersService {
       .getMany();
 
     return [HttpStatus.OK, `You have ${users.length} conversations!`, users];
+  }
+
+  async getPosts(userId: string): Promise<ResponseResult> {
+    const posts = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user', 'post.userId = :userId', {
+        userId,
+      })
+      .orderBy('post.created_at', 'DESC')
+      .getMany();
+
+    return [HttpStatus.OK, `You have ${posts.length} post`, posts];
   }
 }
