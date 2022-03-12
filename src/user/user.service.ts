@@ -225,15 +225,21 @@ export class UsersService {
     return [HttpStatus.OK, 'Successfully updated avatar', update];
   }
 
-  async getFriends(id: string): Promise<ResponseResult> {
+  async getFriends(userId: string): Promise<ResponseResult> {
     const friends = await this.friendRepository
       .createQueryBuilder('friend')
       .leftJoinAndSelect('friend.user', 'friendUser')
       .leftJoinAndSelect('friend.friend', 'friendFriend')
-      .where('friendUser.id = :id', { id })
+      .where('friendUser.id = :userId', { userId })
       .getMany();
 
-    return [HttpStatus.OK, `You have ${friends.length} friends!`, friends];
+    const revampFriends = friends.map((friend) => friend.friend);
+
+    return [
+      HttpStatus.OK,
+      `You have ${revampFriends.length} friends!`,
+      revampFriends,
+    ];
   }
 
   async getConversations(userId: string): Promise<ResponseResult> {
