@@ -94,8 +94,14 @@ export class PostController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postService.findOne(+id);
+  async findOne(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const [status, message, post] = await this.postService.findOne(id);
+      return response(res, status, message, post);
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
   }
 
   @Patch(':id')

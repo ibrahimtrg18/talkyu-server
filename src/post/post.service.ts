@@ -36,8 +36,15 @@ export class PostService {
     return `This action returns all post`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: string): Promise<ResponseResult> {
+    try {
+      const post = await this.postRespository.findOne(id);
+
+      return [HttpStatus.OK, 'Found post!', post];
+    } catch (e) {
+      console.error(e);
+      throw new Error(e);
+    }
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
