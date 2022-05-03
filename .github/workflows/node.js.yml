@@ -6,6 +6,12 @@ name: Node.js CI
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
 jobs:
   build:
@@ -23,13 +29,15 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      - name: Create env file
-        run: |
-          touch .env
-          echo GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} >> .env
-          echo GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} >> .env
-          cat .env
-      - run: yarn cache clean
-      - run: yarn install
-      - run: yarn build
-      - run: pm2 restart Talkyu
+
+      - name: Clean cache
+        run: yarn cache clean
+
+      - name: Installing package server application
+        run: yarn install
+
+      - name: Build server application
+        run: yarn build
+
+      - name: Restart server application
+        run: pm2 restart Talkyu
