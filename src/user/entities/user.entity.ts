@@ -61,9 +61,9 @@ export class User {
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];
 
-  @ManyToMany(() => Post, (post) => post.like_users)
-  @JoinTable({ name: 'user_likes' })
-  like_posts: Post[];
+  @ManyToMany(() => Post, (post) => post.like_by_users)
+  @JoinTable({ name: 'user_like' })
+  liked_post: Post[];
 
   @OneToMany(() => Friend, (friend) => friend.user)
   friends: Friend[];

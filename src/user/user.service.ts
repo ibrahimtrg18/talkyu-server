@@ -270,9 +270,8 @@ export class UsersService {
   async getPosts(userId: string): Promise<ResponseResult> {
     const posts = await this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.user', 'user', 'post.userId = :userId', {
-        userId,
-      })
+      .leftJoinAndSelect('post.user', 'user')
+      .where('post.userId = :userId', { userId })
       .orderBy('post.created_at', 'DESC')
       .getMany();
 

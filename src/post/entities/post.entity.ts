@@ -37,11 +37,11 @@ export class Post {
   })
   updated_at: Date;
 
-  @ManyToOne(() => User, (user) => user.posts)
+  @ManyToOne(() => User, (user) => user.posts, { cascade: true })
   user: User;
 
-  @ManyToMany(() => User, (user) => user.like_posts)
-  like_users: User[];
+  @ManyToMany(() => User, (user) => user.liked_post, { cascade: true })
+  like_by_users: User[];
 
   total_likes: number;
 }

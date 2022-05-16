@@ -96,7 +96,7 @@ export class PostController {
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
-      const [status, message, post] = await this.postService.findOne(id);
+      const [status, message, post] = await this.postService.findPostById(id);
       return response(res, status, message, post);
     } catch (e) {
       console.error(e);
@@ -112,5 +112,24 @@ export class PostController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.postService.remove(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/like')
+  async like(
+    @Res() res: Response,
+    @Param('id') id: string,
+    @User() user: Payload,
+  ) {
+    try {
+      const [status, message, post] = await this.postService.likePostById(
+        id,
+        user.id,
+      );
+      return response(res, status, message, post);
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
   }
 }
