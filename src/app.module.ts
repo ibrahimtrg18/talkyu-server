@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChatGateway } from './chat.gateway';
 import { ChatModule } from './chat/chat.module';
+import { CommentModule } from './comment/comment.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { FriendModule } from './friend/friend.module';
 import { PostModule } from './post/post.module';
@@ -24,6 +25,7 @@ import { UsersModule } from './user/user.module';
     ChatModule,
     FriendModule,
     PostModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
