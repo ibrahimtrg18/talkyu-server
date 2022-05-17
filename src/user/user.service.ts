@@ -267,7 +267,13 @@ export class UsersService {
     return [HttpStatus.OK, `You have ${users.length} conversations!`, users];
   }
 
-  async getPosts(userId: string): Promise<ResponseResult> {
+  async findPostsByUserId(userId: string): Promise<ResponseResult> {
+    const user = await this.userRepository.findOne(userId);
+
+    if (!user) {
+      return [HttpStatus.NOT_FOUND, `User not found!`, null];
+    }
+
     const posts = await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')

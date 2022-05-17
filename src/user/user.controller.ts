@@ -399,9 +399,11 @@ export class UsersController {
   @Get('post')
   async getPostByCurrentUser(@User() user: Payload, @Res() res: Response) {
     try {
-      const [status, message, results] = await this.userService.getPosts(
-        user.id,
-      );
+      const [
+        status,
+        message,
+        results,
+      ] = await this.userService.findPostsByUserId(user.id);
 
       return response(res, status, message, results);
     } catch (e) {
@@ -414,6 +416,21 @@ export class UsersController {
   async userById(@Res() res: Response, @Param('id') id: string) {
     try {
       const [status, message, user] = await this.userService.findOneById(id);
+
+      return response(res, status, message, user);
+    } catch (e) {
+      console.error(e);
+
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
+  }
+
+  @Get(':id/post')
+  async getPostsByUserId(@Res() res: Response, @Param('id') id: string) {
+    try {
+      const [status, message, user] = await this.userService.findPostsByUserId(
+        id,
+      );
 
       return response(res, status, message, user);
     } catch (e) {
