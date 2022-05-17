@@ -109,9 +109,24 @@ export class PostController {
     return this.postService.update(+id, updatePostDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postService.remove(+id);
+  async deletePostById(
+    @Res() res: Response,
+    @Param('id') id: string,
+    @User() user: Payload,
+  ) {
+    try {
+      const [status, message, post] = await this.postService.removePostById(
+        id,
+        user.id,
+      );
+
+      return response(res, status, message, post);
+    } catch (e) {
+      console.error(e);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    }
   }
 
   @UseGuards(JwtAuthGuard)

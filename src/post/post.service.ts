@@ -86,7 +86,37 @@ export class PostService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async removePostById(
+    postId: string,
+    userId: string,
+  ): Promise<ResponseResult> {
+    try {
+      const user = await this.userRespository.findOne(userId);
+
+      const post = await this.postRespository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.id = :postId', { postId })
+        .getOne();
+
+      if (!post) {
+        return [HttpStatus.NOT_FOUND, 'Post not found!', null];
+      }
+
+      if (post.user.id !== user.id) {
+        return [
+          HttpStatus.FORBIDDEN,
+          'Dont have permission for deleting this post!',
+          null,
+        ];
+      } else {
+        const deletedPost = await this.postRespository.delete({ id: postId });
+
+        return [HttpStatus.ACCEPTED, 'Post is deleted!', deletedPost];
+      }
+    } catch (e) {
+      console.error(e);
+      throw new Error(e);
+    }
   }
 }
