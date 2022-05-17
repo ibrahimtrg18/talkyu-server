@@ -4,10 +4,12 @@ import {
   Entity,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Comment } from '../../comment/entities/comment.entity';
 import { User } from '../../user/entities/user.entity';
 
 @Entity()
@@ -44,4 +46,7 @@ export class Post {
   like_by_users: User[];
 
   total_likes: number;
+
+  @OneToMany(() => Comment, (comment) => comment.post)
+  comments: Comment[];
 }
