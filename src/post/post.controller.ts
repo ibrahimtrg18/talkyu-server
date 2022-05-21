@@ -13,6 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
@@ -32,6 +33,7 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
