@@ -16,7 +16,7 @@ import { response } from '../utils/response';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 
-@ApiTags('conversation')
+@ApiTags('Conversation')
 @Controller('conversation')
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}

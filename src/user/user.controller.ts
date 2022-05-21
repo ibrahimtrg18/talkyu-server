@@ -34,7 +34,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
 import { UsersService } from './user.service';
 
-@ApiTags('user')
+@ApiTags('User')
 @Controller('user')
 export class UsersController {
   constructor(

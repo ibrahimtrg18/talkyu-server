@@ -19,7 +19,7 @@ import { CreateFriendDto } from './dto/create-friend.dto';
 import { RequestFriendDto } from './dto/request-friend.dto';
 import { FriendService } from './friend.service';
 
-@ApiTags('friend')
+@ApiTags('Friend')
 @Controller('friend')
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}

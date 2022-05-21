@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes } from '@nestjs/swagger';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
@@ -25,6 +25,7 @@ import { response } from '../utils/response';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostService } from './post.service';
 
+@ApiTags('Post')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
