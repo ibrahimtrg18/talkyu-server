@@ -5,7 +5,6 @@ import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { ResponseResult } from '../utils/response';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
 
 @Injectable()
@@ -26,14 +25,10 @@ export class PostService {
         'Successfully added a new post',
         await this.postRespository.save({ ...createPostDto, user }),
       ];
-    } catch (e) {
-      console.error(e);
-      throw new Error(e);
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-  }
-
-  findAll() {
-    return `This action returns all post`;
   }
 
   async findPostById(id: string): Promise<ResponseResult> {
@@ -49,14 +44,10 @@ export class PostService {
       }
 
       return [HttpStatus.OK, 'Found post!', post];
-    } catch (e) {
-      console.error(e);
-      throw new Error(e);
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-  }
-
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
   }
 
   async likePostById(id: string, userId: string): Promise<ResponseResult> {
@@ -80,9 +71,9 @@ export class PostService {
       });
 
       return [HttpStatus.ACCEPTED, 'Post liked!', likedPost];
-    } catch (e) {
-      console.error(e);
-      throw new Error(e);
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
   }
 
@@ -114,9 +105,9 @@ export class PostService {
 
         return [HttpStatus.ACCEPTED, 'Post is deleted!', deletedPost];
       }
-    } catch (e) {
-      console.error(e);
-      throw new Error(e);
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
   }
 }

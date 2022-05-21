@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
@@ -30,9 +30,10 @@ import { PostService } from './post.service';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -83,9 +84,9 @@ export class PostController {
       });
 
       return response(res, status, message, post);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -94,14 +95,15 @@ export class PostController {
     try {
       const [status, message, post] = await this.postService.findPostById(id);
       return response(res, status, message, post);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async deletePostById(
     @Res() res: Response,
     @Param('id') id: string,
@@ -114,14 +116,15 @@ export class PostController {
       );
 
       return response(res, status, message, post);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post(':id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async like(
     @Res() res: Response,
     @Param('id') id: string,
@@ -133,9 +136,9 @@ export class PostController {
         user.id,
       );
       return response(res, status, message, post);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 }

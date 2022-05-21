@@ -32,9 +32,9 @@ export class WsGuard implements CanActivate {
         return reject(false);
       }
 
-      jwt.verify(bearerToken, jwtConstants.secret, (err, decoded) => {
-        if (err) {
-          client.emit(event, response(null, undefined, err.message, null));
+      jwt.verify(bearerToken, jwtConstants.secret, (error, decoded) => {
+        if (error) {
+          client.emit(event, response(null, undefined, error.message, null));
           return reject(false);
         }
 

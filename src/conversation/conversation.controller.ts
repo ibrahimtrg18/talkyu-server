@@ -7,7 +7,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -21,8 +21,9 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async createConversation(
     @Res() res: Response,
     @Body() createConversationDto: CreateConversationDto,
@@ -40,8 +41,9 @@ export class ConversationController {
     return response(res, status, message, conversation);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async findById(@Res() res: Response, @Param('id') id: string) {
     const [
       status,
@@ -52,8 +54,9 @@ export class ConversationController {
     return response(res, status, message, conversation);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':id/chat')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getChatsByConversationId(
     @Res() res: Response,
     @Param('id') id: string,

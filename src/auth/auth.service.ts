@@ -67,7 +67,6 @@ export class AuthService {
 
   async token(loginUserDto: LoginToken): Promise<ResponseResult> {
     const { id } = await this.jwtService.verify(loginUserDto.token);
-    console.log(id);
 
     const [error, message, user] = await this.userService.findOneById(id);
 

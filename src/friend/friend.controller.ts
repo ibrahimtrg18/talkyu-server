@@ -7,7 +7,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -24,8 +24,9 @@ import { FriendService } from './friend.service';
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async create(
     @Res() res: Response,
     @Body() createFriendDto: CreateFriendDto,
@@ -38,14 +39,15 @@ export class FriendController {
       });
 
       return response(res, status, message, newFriend);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('request')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async requestFriend(
     @Res() res: Response,
     @Body() requestFriendDto: RequestFriendDto,
@@ -62,14 +64,15 @@ export class FriendController {
       });
 
       return response(res, status, message, newFriend);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('accept')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async acceptFriend(
     @Res() res: Response,
     @Body() acceptFriendDto: AcceptFriendDto,
@@ -86,9 +89,9 @@ export class FriendController {
       });
 
       return response(res, status, message, newFriend);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 }

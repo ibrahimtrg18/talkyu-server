@@ -18,14 +18,13 @@ async function bootstrap() {
     .setTitle('Talky')
     .setDescription('Talky Rest API')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/openapi', app, document);
 
   app.use('/api', express.static(path.join(__dirname, '..', 'public')));
   app.useGlobalPipes(new ValidationPipe());
-
-  console.log(configService.get('PORT'));
 
   await app.listen(configService.get('PORT') || 3000);
 }

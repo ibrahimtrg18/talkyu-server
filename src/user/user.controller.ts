@@ -14,7 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { diskStorage } from 'multer';
@@ -50,9 +50,9 @@ export class UsersController {
       );
 
       return response(res, status, message, newUser);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -64,9 +64,9 @@ export class UsersController {
       );
 
       return response(res, status, message, token);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -100,9 +100,9 @@ export class UsersController {
       });
 
       return response(res, status, message, newUser);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -161,13 +161,12 @@ export class UsersController {
         });
         return response(res, status, message, user);
       }
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Post('token')
   async token(
     @Res() res: Response,
@@ -175,20 +174,20 @@ export class UsersController {
     @User() user: Payload,
   ) {
     try {
-      console.log(tokenUserDto);
       const [status, message, token] = await this.authService.token({
         token: tokenUserDto.token,
       });
 
       return response(res, status, message, token);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('account')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async update(
     @Res() res: Response,
     @Body() updateUserDto: UpdateUserDto,
@@ -211,25 +210,27 @@ export class UsersController {
       ] = await this.userService.updateAccount(user.id, updateUserDto);
 
       return response(res, status, message, updatedUser);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('account')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async account(@User() user: Payload, @Res() res: Response) {
     try {
       return response(res, HttpStatus.OK, 'Successfully data account!', user);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('account/avatar')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async updateAvatar(
     @User() user: Payload,
     @Body() updateUserAvatarDto: UpdateUserAvatarDto,
@@ -246,14 +247,15 @@ export class UsersController {
       await this.userService.updateAvatar(user.id, filename);
 
       return response(res, HttpStatus.OK, 'Successfully update avatar!', null);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('account/avatar')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: diskStorage({
@@ -301,9 +303,9 @@ export class UsersController {
         path: path.normalize(file.path.replace('public', '')),
         base64: base64,
       });
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -335,15 +337,16 @@ export class UsersController {
         });
         return file.pipe(res);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
 
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('friend')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async friend(@Res() res: Response, @User() user: Payload) {
     try {
       const [status, message, friends] = await this.userService.getFriends(
@@ -351,14 +354,15 @@ export class UsersController {
       );
 
       return response(res, status, message, friends);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('conversation')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async conversations(@Res() res: Response, @User() user: Payload) {
     try {
       const [
@@ -368,14 +372,15 @@ export class UsersController {
       ] = await this.userService.getConversations(user.id);
 
       return response(res, status, message, conversations);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('search')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async search(
     @User() user: Payload,
     @Res() res: Response,
@@ -388,15 +393,16 @@ export class UsersController {
       });
 
       return response(res, status, message, results);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
 
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('post')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getPostByCurrentUser(@User() user: Payload, @Res() res: Response) {
     try {
       const [
@@ -406,9 +412,9 @@ export class UsersController {
       ] = await this.userService.findPostsByUserId(user.id);
 
       return response(res, status, message, results);
-    } catch (e) {
-      console.error(e);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -418,10 +424,10 @@ export class UsersController {
       const [status, message, user] = await this.userService.findOneById(id);
 
       return response(res, status, message, user);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
 
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 
@@ -433,10 +439,10 @@ export class UsersController {
       );
 
       return response(res, status, message, user);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
 
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
 }

@@ -58,9 +58,9 @@ export const getFile = async ({
       ),
       mime.lookup(filename) as string,
     ];
-  } catch (e) {
-    console.error(e);
-    throw e;
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
   }
 };
 
@@ -93,9 +93,9 @@ export const getFileToBase64 = async ({
           .toString('base64'),
       }),
     ];
-  } catch (e) {
-    console.error(e);
-    throw e;
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
   }
 };
 

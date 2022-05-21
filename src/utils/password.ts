@@ -8,9 +8,9 @@ export const generatePassword = async (
     const hash = await bcrypt.hash(password, saltOrRounds);
 
     return hash;
-  } catch (e) {
-    console.error(e);
-    throw new Error(e);
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
   }
 };
 

@@ -30,25 +30,10 @@ export class ChatGateway {
         createChatDto,
       );
       return this.server.emit('createChat', { status, message, data: chat });
-    } catch (err) {
-      console.log(err);
-      return this.server.emit('createChat', err);
+    } catch (error) {
+      console.error(error);
+      return this.server.emit('createChat', error);
     }
-  }
-
-  @SubscribeMessage('findAllChat')
-  findAll() {
-    return this.chatService.findAll();
-  }
-
-  @SubscribeMessage('findOneChat')
-  findOne(@MessageBody() id: number) {
-    return this.chatService.findOne(id);
-  }
-
-  @SubscribeMessage('updateChat')
-  update(@MessageBody() updateChatDto: UpdateChatDto) {
-    return this.chatService.update(updateChatDto.id, updateChatDto);
   }
 
   @UseGuards(WsGuard)
@@ -59,9 +44,9 @@ export class ChatGateway {
         removeChatDto,
       );
       return this.server.emit('removeChat', { status, message, data: chat });
-    } catch (err) {
-      console.log(err);
-      return this.server.emit('removeChat', err);
+    } catch (error) {
+      console.error(error);
+      return this.server.emit('removeChat', error);
     }
   }
 }

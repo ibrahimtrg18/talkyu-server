@@ -18,7 +18,6 @@ export class ChatGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ): void {
-    console.log(client.id, data);
     this.server.emit('message', data);
   }
 }

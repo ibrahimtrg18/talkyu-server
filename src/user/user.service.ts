@@ -33,22 +33,27 @@ export class UsersService {
   SALT = this.configService.get('SALT');
 
   async register(createUserDto: CreateUserDto): Promise<ResponseResult> {
-    const isEmailExist = await this.findOneByEmail(createUserDto.email);
+    try {
+      const isEmailExist = await this.findOneByEmail(createUserDto.email);
 
-    if (isEmailExist) {
-      return [HttpStatus.CONFLICT, 'Email is already register!', null];
+      if (isEmailExist) {
+        return [HttpStatus.CONFLICT, 'Email is already register!', null];
+      }
+
+      const { password, ...restCreateUserDto } = createUserDto;
+
+      return [
+        HttpStatus.CREATED,
+        'Successfully register new account!',
+        await this.userRepository.save({
+          ...restCreateUserDto,
+          password: await generatePassword(password, parseInt(this.SALT)),
+        }),
+      ];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-
-    const { password, ...restCreateUserDto } = createUserDto;
-
-    return [
-      HttpStatus.CREATED,
-      'Successfully register new account!',
-      await this.userRepository.save({
-        ...restCreateUserDto,
-        password: await generatePassword(password, parseInt(this.SALT)),
-      }),
-    ];
   }
 
   async registerGoogle({
@@ -56,117 +61,147 @@ export class UsersService {
     name,
     google_open_id,
   }): Promise<ResponseResult> {
-    const isEmailExist = await this.findOneByEmail(email);
+    try {
+      const isEmailExist = await this.findOneByEmail(email);
 
-    if (isEmailExist) {
-      return [HttpStatus.CONFLICT, 'Email is already register!', null];
+      if (isEmailExist) {
+        return [HttpStatus.CONFLICT, 'Email is already register!', null];
+      }
+
+      return [
+        HttpStatus.CREATED,
+        'Successfully register new account!',
+        await this.userRepository.save({
+          email,
+          name,
+          password: '',
+          google_open_id,
+        }),
+      ];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-
-    return [
-      HttpStatus.CREATED,
-      'Successfully register new account!',
-      await this.userRepository.save({
-        email,
-        name,
-        password: '',
-        google_open_id,
-      }),
-    ];
   }
 
   async findByQuery(searchUserDto: SearchUserDto): Promise<ResponseResult> {
-    const { user, q, offset = 0, limit = 10 } = searchUserDto;
+    try {
+      const { user, q, offset = 0, limit = 10 } = searchUserDto;
 
-    if (validate(q)) {
-      const results = await this.userRepository.find({
-        select: ['id', 'name', 'email', 'created_at', 'updated_at'],
-        where: {
-          id: q,
-        },
-        skip: offset,
-        take: limit,
-      });
-
-      return [HttpStatus.OK, `Found ${results.length} users!`, results];
-    } else if (isEmail(q)) {
-      const results = await this.userRepository.find({
-        select: ['id', 'name', 'email', 'created_at', 'updated_at'],
-        where: {
-          email: q,
-        },
-        skip: offset,
-        take: limit,
-      });
-      return [HttpStatus.OK, `Found ${results.length} users!`, results];
-    } else {
-      const results = await this.userRepository
-        .createQueryBuilder('user')
-        .leftJoinAndSelect(
-          'user.friends',
-          'friend',
-          'friend.friendId = :userId',
-          {
-            userId: user.id,
-            status: FriendStatus.ACCEPT,
+      if (validate(q)) {
+        const results = await this.userRepository.find({
+          select: ['id', 'name', 'email', 'created_at', 'updated_at'],
+          where: {
+            id: q,
           },
-        )
-        .where('user.id != :userId', { userId: user.id })
-        .loadRelationCountAndMap(
-          'user.total_friends',
-          'user.friends',
-          'total_friends',
-          (qb) =>
-            qb.where('total_friends.status = :status', {
-              status: FriendStatus.ACCEPT,
-            }),
-        )
-        .skip(offset)
-        .limit(limit)
-        .getMany();
+          skip: offset,
+          take: limit,
+        });
 
-      return [HttpStatus.OK, `Found ${results.length} users!`, results];
+        return [HttpStatus.OK, `Found ${results.length} users!`, results];
+      } else if (isEmail(q)) {
+        const results = await this.userRepository.find({
+          select: ['id', 'name', 'email', 'created_at', 'updated_at'],
+          where: {
+            email: q,
+          },
+          skip: offset,
+          take: limit,
+        });
+        return [HttpStatus.OK, `Found ${results.length} users!`, results];
+      } else {
+        const results = await this.userRepository
+          .createQueryBuilder('user')
+          .leftJoinAndSelect(
+            'user.friends',
+            'friend',
+            'friend.friendId = :userId',
+            {
+              userId: user.id,
+              status: FriendStatus.ACCEPT,
+            },
+          )
+          .where('user.id != :userId', { userId: user.id })
+          .loadRelationCountAndMap(
+            'user.total_friends',
+            'user.friends',
+            'total_friends',
+            (qb) =>
+              qb.where('total_friends.status = :status', {
+                status: FriendStatus.ACCEPT,
+              }),
+          )
+          .skip(offset)
+          .limit(limit)
+          .getMany();
+
+        return [HttpStatus.OK, `Found ${results.length} users!`, results];
+      }
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
   }
 
   async findOneById(id: string): Promise<ResponseResult> {
-    const user = await this.userRepository.findOne(id);
+    try {
+      const user = await this.userRepository.findOne(id);
 
-    if (!user) {
-      return [HttpStatus.NOT_FOUND, `Found user!`, user];
+      if (!user) {
+        return [HttpStatus.NOT_FOUND, `Found user!`, user];
+      }
+
+      return [HttpStatus.OK, `Found user!`, user];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-
-    return [HttpStatus.OK, `Found user!`, user];
   }
 
   async findOneByEmail(email: string) {
-    return await this.userRepository.findOne({ email });
+    try {
+      return await this.userRepository.findOne({ email });
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
   }
 
   async findByLogin(loginUserDto: LoginUserDto) {
-    const { password, ...restLoginUserDto } = loginUserDto;
+    try {
+      const { password, ...restLoginUserDto } = loginUserDto;
 
-    if (password) {
-      const user = await this.userRepository.findOne({ ...restLoginUserDto });
-      if (!user) {
+      if (password) {
+        const user = await this.userRepository.findOne({ ...restLoginUserDto });
+        if (!user) {
+          return null;
+        }
+
+        const isMatch = await comparePassword(password, user.password);
+        if (isMatch) {
+          return user;
+        }
+
         return null;
       }
 
-      const isMatch = await comparePassword(password, user.password);
-      if (isMatch) {
-        return user;
-      }
-
       return null;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-
-    return null;
   }
 
   async findByGoogleAccount(email: string, google_open_id: string) {
-    return this.userRepository.findOne({
-      email,
-      google_open_id,
-    });
+    try {
+      return this.userRepository.findOne({
+        email,
+        google_open_id,
+      });
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
   }
 
   async updateAccount(
@@ -215,72 +250,92 @@ export class UsersService {
     userId: string,
     avatarFilename: string,
   ): Promise<ResponseResult> {
-    const user = await this.userRepository.findOne(userId);
+    try {
+      const user = await this.userRepository.findOne(userId);
 
-    const update = await this.userRepository.save({
-      ...user,
-      avatar: avatarFilename,
-    });
+      const update = await this.userRepository.save({
+        ...user,
+        avatar: avatarFilename,
+      });
 
-    return [HttpStatus.OK, 'Successfully updated avatar', update];
+      return [HttpStatus.OK, 'Successfully updated avatar', update];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
   }
 
   async getFriends(userId: string): Promise<ResponseResult> {
-    const friends = await this.friendRepository
-      .createQueryBuilder('friend')
-      .leftJoinAndSelect('friend.user', 'friendUser')
-      .leftJoinAndSelect('friend.friend', 'friendFriend')
-      .where('friendUser.id = :userId', { userId })
-      .getMany();
+    try {
+      const friends = await this.friendRepository
+        .createQueryBuilder('friend')
+        .leftJoinAndSelect('friend.user', 'friendUser')
+        .leftJoinAndSelect('friend.friend', 'friendFriend')
+        .where('friendUser.id = :userId', { userId })
+        .getMany();
 
-    const revampFriends = friends.map((friend) => friend.friend);
+      const revampFriends = friends.map((friend) => friend.friend);
 
-    return [
-      HttpStatus.OK,
-      `You have ${revampFriends.length} friends!`,
-      revampFriends,
-    ];
+      return [
+        HttpStatus.OK,
+        `You have ${revampFriends.length} friends!`,
+        revampFriends,
+      ];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
   }
 
   async getConversations(userId: string): Promise<ResponseResult> {
-    const userConversation = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.conversations', 'conversation')
-      .where('user.id = :userId', { userId })
-      .getOne();
+    try {
+      const userConversation = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.conversations', 'conversation')
+        .where('user.id = :userId', { userId })
+        .getOne();
 
-    const conversations = userConversation.conversations;
+      const conversations = userConversation.conversations;
 
-    if (conversations.length === 0) {
-      return [HttpStatus.OK, `You have 0 conversations!`, []];
+      if (conversations.length === 0) {
+        return [HttpStatus.OK, `You have 0 conversations!`, []];
+      }
+
+      const users = await this.conversationRepository
+        .createQueryBuilder('conversation')
+        .leftJoinAndSelect('conversation.users', 'user')
+        .where('user.id != :userId', { userId })
+        .andWhere('conversation.id IN(:conversationId)', {
+          conversationId: conversations.map((conversation) => conversation.id),
+        })
+        .getMany();
+
+      return [HttpStatus.OK, `You have ${users.length} conversations!`, users];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-
-    const users = await this.conversationRepository
-      .createQueryBuilder('conversation')
-      .leftJoinAndSelect('conversation.users', 'user')
-      .where('user.id != :userId', { userId })
-      .andWhere('conversation.id IN(:conversationId)', {
-        conversationId: conversations.map((conversation) => conversation.id),
-      })
-      .getMany();
-
-    return [HttpStatus.OK, `You have ${users.length} conversations!`, users];
   }
 
   async findPostsByUserId(userId: string): Promise<ResponseResult> {
-    const user = await this.userRepository.findOne(userId);
+    try {
+      const user = await this.userRepository.findOne(userId);
 
-    if (!user) {
-      return [HttpStatus.NOT_FOUND, `User not found!`, null];
+      if (!user) {
+        return [HttpStatus.NOT_FOUND, `User not found!`, null];
+      }
+
+      const posts = await this.postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.userId = :userId', { userId })
+        .orderBy('post.created_at', 'DESC')
+        .getMany();
+
+      return [HttpStatus.OK, `You have ${posts.length} post`, posts];
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
     }
-
-    const posts = await this.postRepository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.user', 'user')
-      .where('post.userId = :userId', { userId })
-      .orderBy('post.created_at', 'DESC')
-      .getMany();
-
-    return [HttpStatus.OK, `You have ${posts.length} post`, posts];
   }
 }

@@ -7,7 +7,7 @@ export class CreatePostDto {
   user: Payload;
 
   @ApiProperty({ type: 'string', format: 'binary' })
-  file: string;
+  file: any;
 
   @ApiProperty()
   @IsDefined()
