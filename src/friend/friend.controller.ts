@@ -1,10 +1,7 @@
 import {
   Body,
   Controller,
-  Delete,
-  Get,
   HttpStatus,
-  Param,
   Patch,
   Post,
   Res,
@@ -20,7 +17,6 @@ import { response } from '../utils/response';
 import { AcceptFriendDto } from './dto/accept-friend.dto';
 import { CreateFriendDto } from './dto/create-friend.dto';
 import { RequestFriendDto } from './dto/request-friend.dto';
-import { UpdateFriendDto } from './dto/update-friend.dto';
 import { FriendService } from './friend.service';
 
 @ApiTags('friend')
@@ -94,25 +90,5 @@ export class FriendController {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
     }
-  }
-
-  @Get()
-  findAll() {
-    return this.friendService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.friendService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFriendDto: UpdateFriendDto) {
-    return this.friendService.update(+id, updateFriendDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.friendService.remove(+id);
   }
 }

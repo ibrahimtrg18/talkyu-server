@@ -5,7 +5,6 @@ import {
   Get,
   HttpStatus,
   Param,
-  Patch,
   Post,
   Res,
   UploadedFile,
@@ -13,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiConsumes } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
@@ -24,7 +23,6 @@ import { User } from '../decorators/user.decorator';
 import { Payload } from '../interfaces/payload.interface';
 import { response } from '../utils/response';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { PostService } from './post.service';
 
 @Controller('post')
@@ -90,11 +88,6 @@ export class PostController {
     }
   }
 
-  @Get()
-  findAll() {
-    return this.postService.findAll();
-  }
-
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
@@ -104,11 +97,6 @@ export class PostController {
       console.error(e);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, e, null);
     }
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postService.update(+id, updatePostDto);
   }
 
   @UseGuards(JwtAuthGuard)
