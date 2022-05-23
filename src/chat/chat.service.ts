@@ -1,9 +1,8 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Conversation } from '../conversation/entities/conversation.entity';
-import { ResponseResult } from '../utils/response';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { RemoveChatDto } from './dto/remove-chat.dto';
 import { Chat } from './entities/chat.entity';
@@ -17,7 +16,7 @@ export class ChatService {
     private conversationRepository: Repository<Conversation>,
   ) {}
 
-  async create(createChatDto: CreateChatDto): Promise<ResponseResult> {
+  async create(createChatDto: CreateChatDto) {
     try {
       const conversation = await this.conversationRepository.findOne(
         createChatDto.conversation.id,
@@ -28,28 +27,26 @@ export class ChatService {
         lastMessage: createChatDto.message,
       });
 
-      return [
-        HttpStatus.OK,
-        'Successfully Send message!',
-        await this.chatRepository.save({
-          conversation: conversation,
-          ...createChatDto,
-        }),
-      ];
+      const newChat = await this.chatRepository.save({
+        conversation: conversation,
+        ...createChatDto,
+      });
+
+      return newChat;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async remove(removeChatDto: RemoveChatDto): Promise<ResponseResult> {
+  async remove(removeChatDto: RemoveChatDto) {
     try {
-      const deleteChat = await this.chatRepository.delete({
+      const deletedChat = await this.chatRepository.delete({
         id: removeChatDto.chat.id,
         user: removeChatDto.user,
       });
 
-      return [HttpStatus.OK, 'Successfully Send message!', deleteChat];
+      return deletedChat;
     } catch (error) {
       console.error(error);
       throw new Error(error);

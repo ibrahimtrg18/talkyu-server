@@ -1,18 +1,20 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as jwt from 'jsonwebtoken';
 import { Observable } from 'rxjs';
 
-import { UsersService } from '../user/user.service';
+import { UserService } from '../user/user.service';
 import { response } from '../utils/response';
 import { jwtConstants } from './constants';
 
 @Injectable()
 export class WsGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private userService: UsersService,
-  ) {}
+  constructor(private reflector: Reflector, private userService: UserService) {}
 
   canActivate(
     context: ExecutionContext,
@@ -38,17 +40,29 @@ export class WsGuard implements CanActivate {
           return reject(false);
         }
 
-        this.userService
-          .findOneById(decoded.id)
-          .then(([status, message, user]) => {
-            if (user) {
-              context.switchToWs().getData().user = user;
-              return resolve(true);
-            } else {
-              client.emit(event, response(null, status, message, null));
-              return reject(false);
+        this.userService.findOneById(decoded.id).then((user) => {
+          if (user) {
+            context.switchToWs().getData().user = user;
+            return resolve(true);
+          } else {
+            if (!user) {
+              client.emit(
+                event,
+                response(
+                  null,
+                  HttpStatus.NOT_FOUND,
+                  'Failed: User not found!',
+                  user,
+                ),
+              );
             }
-          });
+            client.emit(
+              event,
+              response(null, HttpStatus.OK, 'Failed: User correct!', user),
+            );
+            return reject(false);
+          }
+        });
       });
     });
   }

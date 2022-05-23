@@ -4,14 +4,14 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { User } from '../user/entities/user.entity';
-import { UsersModule } from '../user/user.module';
+import { UserModule } from '../user/user.module';
 import { AuthService } from './auth.service';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
-    forwardRef(() => UsersModule),
+    forwardRef(() => UserModule),
     TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.register({

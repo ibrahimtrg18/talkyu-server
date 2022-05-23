@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -8,16 +8,14 @@ import { Conversation } from '../conversation/entities/conversation.entity';
 import { Friend, FriendStatus } from '../friend/entities/friend.entity';
 import { Post } from '../post/entities/post.entity';
 import { comparePassword, generatePassword } from '../utils/password';
-import { ResponseResult } from '../utils/response';
 import { isEmail } from '../utils/validation';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
-export class UsersService {
+export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -32,59 +30,39 @@ export class UsersService {
 
   SALT = this.configService.get('SALT');
 
-  async register(createUserDto: CreateUserDto): Promise<ResponseResult> {
+  async register(createUserDto: CreateUserDto): Promise<User> {
     try {
-      const isEmailExist = await this.findOneByEmail(createUserDto.email);
-
-      if (isEmailExist) {
-        return [HttpStatus.CONFLICT, 'Email is already register!', null];
-      }
-
       const { password, ...restCreateUserDto } = createUserDto;
 
-      return [
-        HttpStatus.CREATED,
-        'Successfully register new account!',
-        await this.userRepository.save({
-          ...restCreateUserDto,
-          password: await generatePassword(password, parseInt(this.SALT)),
-        }),
-      ];
+      const newUser = await this.userRepository.save({
+        ...restCreateUserDto,
+        password: await generatePassword(password, parseInt(this.SALT)),
+      });
+
+      return newUser;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async registerGoogle({
-    email,
-    name,
-    google_open_id,
-  }): Promise<ResponseResult> {
+  async registerWithGoogle({ email, name, google_open_id }) {
     try {
-      const isEmailExist = await this.findOneByEmail(email);
+      const newUser = await this.userRepository.save({
+        email,
+        name,
+        password: '',
+        google_open_id,
+      });
 
-      if (isEmailExist) {
-        return [HttpStatus.CONFLICT, 'Email is already register!', null];
-      }
-
-      return [
-        HttpStatus.CREATED,
-        'Successfully register new account!',
-        await this.userRepository.save({
-          email,
-          name,
-          password: '',
-          google_open_id,
-        }),
-      ];
+      return newUser;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async findByQuery(searchUserDto: SearchUserDto): Promise<ResponseResult> {
+  async findByQuery(searchUserDto: SearchUserDto) {
     try {
       const { user, q, offset = 0, limit = 10 } = searchUserDto;
 
@@ -98,7 +76,7 @@ export class UsersService {
           take: limit,
         });
 
-        return [HttpStatus.OK, `Found ${results.length} users!`, results];
+        return results;
       } else if (isEmail(q)) {
         const results = await this.userRepository.find({
           select: ['id', 'name', 'email', 'created_at', 'updated_at'],
@@ -108,7 +86,7 @@ export class UsersService {
           skip: offset,
           take: limit,
         });
-        return [HttpStatus.OK, `Found ${results.length} users!`, results];
+        return results;
       } else {
         const results = await this.userRepository
           .createQueryBuilder('user')
@@ -135,7 +113,7 @@ export class UsersService {
           .limit(limit)
           .getMany();
 
-        return [HttpStatus.OK, `Found ${results.length} users!`, results];
+        return results;
       }
     } catch (error) {
       console.error(error);
@@ -143,15 +121,11 @@ export class UsersService {
     }
   }
 
-  async findOneById(id: string): Promise<ResponseResult> {
+  async findOneById(id: string) {
     try {
       const user = await this.userRepository.findOne(id);
 
-      if (!user) {
-        return [HttpStatus.NOT_FOUND, `Found user!`, user];
-      }
-
-      return [HttpStatus.OK, `Found user!`, user];
+      return user;
     } catch (error) {
       console.error(error);
       throw new Error(error);
@@ -204,52 +178,18 @@ export class UsersService {
     }
   }
 
-  async updateAccount(
-    userId: string,
-    updateUserDto: UpdateUserDto,
-  ): Promise<ResponseResult> {
-    const isPasswordMatch = await this.userRepository.findOne({
-      id: userId,
-      password: updateUserDto.confirmPassword,
+  async update(user: User) {
+    const { password, ...restUser } = user;
+
+    const updatedUser = await this.userRepository.save({
+      ...restUser,
+      password: await generatePassword(password, parseInt(this.SALT)),
     });
 
-    if (!isPasswordMatch) {
-      return [HttpStatus.FORBIDDEN, 'Password is incorrect!', null];
-    }
-
-    const user = await this.userRepository.findOne({
-      id: userId,
-    });
-
-    if (!user) {
-      return [HttpStatus.NOT_FOUND, "Sorry, We can't find your account!", null];
-    }
-
-    const { confirmPassword, newPassword, ...rest } = updateUserDto;
-
-    // changes password
-    if (newPassword) {
-      const { password, ...updatedUser } = await this.userRepository.save({
-        ...user,
-        ...rest,
-        password: newPassword,
-      });
-
-      return [HttpStatus.OK, 'Successfully changes password!', updatedUser];
-    }
-
-    // changes data
-    return [
-      HttpStatus.OK,
-      'Successfully changes password!',
-      await this.userRepository.save({ ...user, ...rest }),
-    ];
+    return updatedUser;
   }
 
-  async updateAvatar(
-    userId: string,
-    avatarFilename: string,
-  ): Promise<ResponseResult> {
+  async updateAvatar(userId: string, avatarFilename: string) {
     try {
       const user = await this.userRepository.findOne(userId);
 
@@ -258,14 +198,14 @@ export class UsersService {
         avatar: avatarFilename,
       });
 
-      return [HttpStatus.OK, 'Successfully updated avatar', update];
+      return update;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async getFriends(userId: string): Promise<ResponseResult> {
+  async getFriends(userId: string) {
     try {
       const friends = await this.friendRepository
         .createQueryBuilder('friend')
@@ -276,18 +216,14 @@ export class UsersService {
 
       const revampFriends = friends.map((friend) => friend.friend);
 
-      return [
-        HttpStatus.OK,
-        `You have ${revampFriends.length} friends!`,
-        revampFriends,
-      ];
+      return revampFriends;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async getConversations(userId: string): Promise<ResponseResult> {
+  async getConversations(userId: string) {
     try {
       const userConversation = await this.userRepository
         .createQueryBuilder('user')
@@ -298,7 +234,7 @@ export class UsersService {
       const conversations = userConversation.conversations;
 
       if (conversations.length === 0) {
-        return [HttpStatus.OK, `You have 0 conversations!`, []];
+        return [];
       }
 
       const users = await this.conversationRepository
@@ -310,21 +246,15 @@ export class UsersService {
         })
         .getMany();
 
-      return [HttpStatus.OK, `You have ${users.length} conversations!`, users];
+      return users;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async findPostsByUserId(userId: string): Promise<ResponseResult> {
+  async findPostsByUserId(userId: string) {
     try {
-      const user = await this.userRepository.findOne(userId);
-
-      if (!user) {
-        return [HttpStatus.NOT_FOUND, `User not found!`, null];
-      }
-
       const posts = await this.postRepository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.user', 'user')
@@ -332,7 +262,7 @@ export class UsersService {
         .orderBy('post.created_at', 'DESC')
         .getMany();
 
-      return [HttpStatus.OK, `You have ${posts.length} post`, posts];
+      return posts;
     } catch (error) {
       console.error(error);
       throw new Error(error);

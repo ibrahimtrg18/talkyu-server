@@ -1,12 +1,8 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from '../user/entities/user.entity';
-import { ResponseResult } from '../utils/response';
-import { AcceptFriendDto } from './dto/accept-friend.dto';
-import { CreateFriendDto } from './dto/create-friend.dto';
-import { RequestFriendDto } from './dto/request-friend.dto';
 import { Friend, FriendStatus } from './entities/friend.entity';
 
 @Injectable()
@@ -18,67 +14,44 @@ export class FriendService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createFriendDto: CreateFriendDto): Promise<ResponseResult> {
+  async findByUserIdAndFriendId(userId: string, friendId: string) {
     try {
-      const user = await this.userRepository.findOne(createFriendDto.user.id);
-      const friend = await this.userRepository.findOne(
-        createFriendDto.friend.id,
-      );
-
-      const isExist = await this.friendRepository.findOne({
-        where: { user, friend },
+      return await this.friendRepository.findOne({
+        user: {
+          id: userId,
+        },
+        friend: {
+          id: friendId,
+        },
       });
-
-      if (!friend) {
-        return [HttpStatus.NOT_FOUND, null, 'We dont find your friend id'];
-      }
-
-      if (isExist) {
-        return [HttpStatus.CONFLICT, null, 'You already add him/her'];
-      }
-
-      const newFriend = new Friend();
-      newFriend.user = user;
-      newFriend.friend = friend;
-
-      return [
-        HttpStatus.CREATED,
-        'Successfully added a new friend',
-        await this.friendRepository.save(newFriend),
-      ];
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async requestFriend(
-    requestFriendDto: RequestFriendDto,
-  ): Promise<ResponseResult> {
+  async create({ user, friend }: { user: User; friend: User }) {
     try {
-      const user = await this.userRepository.findOne(requestFriendDto.user.id);
-      const friend = await this.userRepository.findOne(
-        requestFriendDto.friend.id,
-      );
+      const newFriend = new Friend();
+      newFriend.user = user;
+      newFriend.friend = friend;
 
-      const isExist = await this.friendRepository
-        .createQueryBuilder('friend')
-        .innerJoinAndSelect('friend.user', 'user')
-        .where('friend.user = :userId', {
-          userId: user.id,
-        })
-        .andWhere('friend.friend = :friendId', {
-          friendId: friend.id,
-        })
-        .getOne();
+      const addedFriend = await this.friendRepository.save(newFriend);
 
-      if (!friend) {
-        return [HttpStatus.NOT_FOUND, null, 'We dont find your friend id'];
-      }
+      return addedFriend;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  }
 
-      if (isExist) {
-        return [HttpStatus.CONFLICT, null, 'You already add him/her'];
-      }
+  async requestFriend({ user, friend }: { user: User; friend: User }) {
+    try {
+      const agreementUser = new Friend();
+      agreementUser.user = friend;
+      agreementUser.friend = user;
+      agreementUser.status = FriendStatus.AGREEMENT;
+      await this.friendRepository.save(agreementUser);
 
       const requestUser = new Friend();
       requestUser.user = user;
@@ -86,39 +59,24 @@ export class FriendService {
       requestUser.status = FriendStatus.REQUEST;
       const createRequestUser = await this.friendRepository.save(requestUser);
 
-      const agreementUser = new Friend();
-      agreementUser.user = friend;
-      agreementUser.friend = user;
-      agreementUser.status = FriendStatus.AGREEMENT;
-      const createAgreementUser = await this.friendRepository.save(
-        agreementUser,
-      );
-
-      return [HttpStatus.OK, 'Sent request friend!', createRequestUser];
+      return createRequestUser;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async acceptFriend(
-    acceptFriendDto: AcceptFriendDto,
-  ): Promise<ResponseResult> {
+  async findFriendUserByStatus({
+    user,
+    friend,
+    status,
+  }: {
+    user: User;
+    friend: User;
+    status: FriendStatus;
+  }) {
     try {
-      const user = await this.userRepository.findOne(acceptFriendDto.user.id);
-      const friend = await this.userRepository.findOne(
-        acceptFriendDto.friend.id,
-      );
-
-      if (!friend) {
-        return [
-          HttpStatus.NOT_FOUND,
-          null,
-          "We couldn't find request friend id",
-        ];
-      }
-
-      const isAlreadySendRequestFriend = await this.friendRepository
+      return await this.friendRepository
         .createQueryBuilder('friend')
         .innerJoinAndSelect('friend.user', 'user')
         .where('friend.user = :userId', {
@@ -128,50 +86,28 @@ export class FriendService {
           friendId: friend.id,
         })
         .andWhere('friend.status = :status', {
-          status: FriendStatus.REQUEST,
+          status: status,
         })
         .getOne();
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  }
 
-      if (isAlreadySendRequestFriend) {
-        return [
-          HttpStatus.CONFLICT,
-          null,
-          'You already sent him request friend Him/Her!',
-        ];
-      }
-
-      const isAlreadyAcceptRequestFriend = await this.friendRepository
-        .createQueryBuilder('friend')
-        .innerJoinAndSelect('friend.user', 'user')
-        .where('friend.user = :userId', {
-          userId: user.id,
-        })
-        .andWhere('friend.friend = :friendId', {
-          friendId: friend.id,
-        })
-        .andWhere('friend.status = :status', {
-          status: FriendStatus.ACCEPT,
-        })
-        .getOne();
-
-      if (isAlreadyAcceptRequestFriend) {
-        return [
-          HttpStatus.CONFLICT,
-          'You already accept request friend!',
-          null,
-        ];
-      }
-
-      await this.friendRepository
+  async acceptFriend({ user, friend }: { user: User; friend: User }) {
+    try {
+      const acceptedFriend = await this.friendRepository
         .createQueryBuilder('friend')
         .update()
         .set({ status: FriendStatus.ACCEPT })
-        .where('friend.userId = :userId', {
-          userId: user.id,
-        })
-        .andWhere('friend.friendId = :friendId', {
-          friendId: friend.id,
-        })
+        .where(
+          '((friend.userId = :userId) AND (friend.friendId = :friendId) OR (friend.userId = :friendId) AND (friend.friendId = :userId))',
+          {
+            userId: user.id,
+            friendId: friend.id,
+          },
+        )
         .andWhere(
           '(friend.status = :statusAgreement) OR (friend.status = :statusRequest)',
           {
@@ -181,7 +117,7 @@ export class FriendService {
         )
         .execute();
 
-      return [HttpStatus.NO_CONTENT, 'Accept request friend!', null];
+      return acceptedFriend;
     } catch (error) {
       console.error(error);
       throw new Error(error);

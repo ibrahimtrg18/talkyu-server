@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Param,
   Post,
   Res,
@@ -29,29 +30,62 @@ export class ConversationController {
     @Body() createConversationDto: CreateConversationDto,
     @User() user: any,
   ) {
-    const [
-      status,
-      message,
-      conversation,
-    ] = await this.conversationService.create({
+    const conversation = await this.conversationService.create({
       ...createConversationDto,
       users: [...createConversationDto.users, user],
     });
 
-    return response(res, status, message, conversation);
+    if (!conversation) {
+      return response(
+        res,
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Failed: Check user ids Invalid!',
+        conversation,
+      );
+    }
+
+    return response(
+      res,
+      HttpStatus.CREATED,
+      'Successfully: Create conversation!',
+      conversation,
+    );
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findById(@Res() res: Response, @Param('id') id: string) {
-    const [
-      status,
-      message,
-      conversation,
-    ] = await this.conversationService.findById(id);
+    const isExist = await this.conversationService.findById(id);
 
-    return response(res, status, message, conversation);
+    if (!isExist) {
+      return response(
+        res,
+        HttpStatus.NOT_FOUND,
+        'Failed: Conversation not found!',
+        isExist,
+      );
+    }
+
+    const conversation = await this.conversationService.findConversationUserById(
+      id,
+    );
+
+    if (!conversation) {
+      return response(
+        res,
+        HttpStatus.NOT_FOUND,
+        'Failed: Conversation not found!',
+        conversation,
+      );
+    }
+
+    return response(
+      res,
+      HttpStatus.OK,
+      'Successfully: Get conversation!',
+      conversation,
+    );
   }
 
   @Get(':id/chat')
@@ -61,12 +95,24 @@ export class ConversationController {
     @Res() res: Response,
     @Param('id') id: string,
   ) {
-    const [
-      status,
-      message,
-      conversationChat,
-    ] = await this.conversationService.getChatsById(id);
+    const isExist = await this.conversationService.findById(id);
 
-    return response(res, status, message, conversationChat);
+    if (!isExist) {
+      return response(
+        res,
+        HttpStatus.NOT_FOUND,
+        'Failed: Conversation not found!',
+        isExist,
+      );
+    }
+
+    const chats = await this.conversationService.getChatsById(id);
+
+    return response(
+      res,
+      HttpStatus.OK,
+      'Successfully: Get chat conversation',
+      chats,
+    );
   }
 }

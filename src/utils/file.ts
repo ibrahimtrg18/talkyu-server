@@ -1,11 +1,8 @@
-import { HttpStatus } from '@nestjs/common';
 import * as fileType from 'file-type';
 import * as fs from 'fs';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as util from 'util';
-
-import { ResponseResult } from './response';
 
 const readdir = util.promisify(fs.readdir);
 
@@ -31,7 +28,7 @@ export const createFile = async (base64: string, { prefix, name }: Path) => {
 export const getFile = async ({
   prefix,
   name,
-}: Path): Promise<[HttpStatus, string, fs.ReadStream, string]> => {
+}: Path): Promise<[fs.ReadStream, string | boolean]> => {
   try {
     const files = await readdir(
       path.join(path.resolve('./'), ...['public', ...prefix]),
@@ -42,17 +39,10 @@ export const getFile = async ({
     );
 
     if (!filename) {
-      return [
-        HttpStatus.NOT_FOUND,
-        'File not found!',
-        null,
-        'application/json',
-      ];
+      return [null, 'application/json'];
     }
 
     return [
-      HttpStatus.OK,
-      'Successfully get file!',
       fs.createReadStream(
         path.join(path.resolve('./'), ...['public', ...prefix, filename]),
       ),
@@ -64,10 +54,7 @@ export const getFile = async ({
   }
 };
 
-export const getFileToBase64 = async ({
-  prefix,
-  name,
-}: Path): Promise<ResponseResult> => {
+export const getFileToBase64 = async ({ prefix, name }: Path) => {
   try {
     const files = await readdir(
       path.join(path.resolve('./'), ...['public', ...prefix]),
@@ -78,21 +65,19 @@ export const getFileToBase64 = async ({
     );
 
     if (!filename) {
-      return [HttpStatus.NOT_FOUND, 'File not found!', null];
+      return null;
     }
 
-    return [
-      HttpStatus.OK,
-      'Successfully get file!',
-      formatBase64({
-        mimetype: mime.lookup(filename),
-        encoded: fs
-          .readFileSync(
-            path.join(path.resolve('./'), ...['public', ...prefix, filename]),
-          )
-          .toString('base64'),
-      }),
-    ];
+    const file = formatBase64({
+      mimetype: mime.lookup(filename),
+      encoded: fs
+        .readFileSync(
+          path.join(path.resolve('./'), ...['public', ...prefix, filename]),
+        )
+        .toString('base64'),
+    });
+
+    return file;
   } catch (error) {
     console.error(error);
     throw new Error(error);

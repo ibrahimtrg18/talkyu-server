@@ -6,7 +6,7 @@ import { Conversation } from '../conversation/entities/conversation.entity';
 import { Friend } from '../friend/entities/friend.entity';
 import { Post } from '../post/entities/post.entity';
 import { User } from '../user/entities/user.entity';
-import { UsersService } from '../user/user.service';
+import { UserService } from '../user/user.service';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { Chat } from './entities/chat.entity';
@@ -16,6 +16,6 @@ import { Chat } from './entities/chat.entity';
     AuthModule,
     TypeOrmModule.forFeature([Chat, User, Conversation, Friend, Post]),
   ],
-  providers: [ChatGateway, ChatService, UsersService, Conversation],
+  providers: [ChatGateway, ChatService, UserService, Conversation],
 })
 export class ChatModule {}

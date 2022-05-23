@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { HttpStatus, UseGuards } from '@nestjs/common';
 import {
   MessageBody,
   SubscribeMessage,
@@ -9,10 +9,10 @@ import { Server } from 'socket.io';
 
 import { WsGuard } from '../auth/ws.guard';
 import { Event } from '../decorators/event.decorator';
+import { response } from '../utils/response';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { RemoveChatDto } from './dto/remove-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
 
 @WebSocketGateway()
 export class ChatGateway {
@@ -26,13 +26,25 @@ export class ChatGateway {
   @Event('createChat')
   async create(@MessageBody() createChatDto: CreateChatDto) {
     try {
-      const [status, message, chat] = await this.chatService.create(
-        createChatDto,
+      const chat = await this.chatService.create(createChatDto);
+
+      if (!chat) {
+        return this.server.emit(
+          'createChat',
+          response(null, HttpStatus.BAD_REQUEST, 'Failed: send message!', chat),
+        );
+      }
+
+      return this.server.emit(
+        'createChat',
+        response(null, HttpStatus.OK, 'Successfully: send message!', chat),
       );
-      return this.server.emit('createChat', { status, message, data: chat });
     } catch (error) {
       console.error(error);
-      return this.server.emit('createChat', error);
+      return this.server.emit(
+        'createChat',
+        response(null, HttpStatus.INTERNAL_SERVER_ERROR, error, null),
+      );
     }
   }
 
@@ -40,13 +52,30 @@ export class ChatGateway {
   @SubscribeMessage('removeChat')
   async remove(@MessageBody() removeChatDto: RemoveChatDto) {
     try {
-      const [status, message, chat] = await this.chatService.remove(
-        removeChatDto,
+      const chat = await this.chatService.remove(removeChatDto);
+
+      if (!chat.affected) {
+        return this.server.emit(
+          'createChat',
+          response(
+            null,
+            HttpStatus.BAD_REQUEST,
+            'Failed: remove message!',
+            chat,
+          ),
+        );
+      }
+
+      return this.server.emit(
+        'removeChat',
+        response(null, HttpStatus.OK, 'Successfully: remove message', chat),
       );
-      return this.server.emit('removeChat', { status, message, data: chat });
     } catch (error) {
       console.error(error);
-      return this.server.emit('removeChat', error);
+      return this.server.emit(
+        'removeChat',
+        response(null, HttpStatus.INTERNAL_SERVER_ERROR, error, null),
+      );
     }
   }
 }

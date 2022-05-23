@@ -5,13 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { ChatGateway } from './chat.gateway';
 import { ChatModule } from './chat/chat.module';
 import { CommentModule } from './comment/comment.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { FriendModule } from './friend/friend.module';
 import { PostModule } from './post/post.module';
-import { UsersModule } from './user/user.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -19,7 +18,7 @@ import { UsersModule } from './user/user.module';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot(),
-    UsersModule,
+    UserModule,
     AuthModule,
     ConversationModule,
     ChatModule,
@@ -28,6 +27,6 @@ import { UsersModule } from './user/user.module';
     CommentModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway],
+  providers: [AppService],
 })
 export class AppModule {}

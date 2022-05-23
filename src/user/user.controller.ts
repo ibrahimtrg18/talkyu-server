@@ -25,6 +25,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { Payload } from '../interfaces/payload.interface';
 import { createFile, getFile, getFileToBase64 } from '../utils/file';
+import { comparePassword } from '../utils/password';
 import { response } from '../utils/response';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginGoogleUserDto, LoginUserDto } from './dto/login-user.dto';
@@ -32,24 +33,40 @@ import { SearchUserDto } from './dto/search-user.dto';
 import { TokenUserDto } from './dto/token-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserAvatarDto } from './dto/update-user-avatar.dto';
-import { UsersService } from './user.service';
+import { UserService } from './user.service';
 
 @ApiTags('User')
 @Controller('user')
-export class UsersController {
+export class UserController {
   constructor(
-    private readonly userService: UsersService,
+    private readonly userService: UserService,
     private readonly authService: AuthService,
   ) {}
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
-      const [status, message, newUser] = await this.userService.register(
-        createUserDto,
+      const isEmailExist = await this.userService.findOneByEmail(
+        createUserDto.email,
       );
 
-      return response(res, status, message, newUser);
+      if (isEmailExist) {
+        return response(
+          res,
+          HttpStatus.CONFLICT,
+          'Failed: Email is already register!',
+          null,
+        );
+      }
+
+      const newUser = await this.userService.register(createUserDto);
+
+      return response(
+        res,
+        HttpStatus.CREATED,
+        'Successfully: Create a new account!',
+        newUser,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -59,11 +76,23 @@ export class UsersController {
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
     try {
-      const [status, message, token] = await this.authService.login(
-        loginUserDto,
-      );
+      const authentication = await this.authService.login(loginUserDto);
 
-      return response(res, status, message, token);
+      if (!authentication) {
+        return response(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          'Failed: Email and Password incorrect!',
+          authentication,
+        );
+      }
+
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: Login!',
+        authentication,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -93,13 +122,29 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      const [status, message, newUser] = await this.userService.registerGoogle({
+      const isEmailExist = await this.userService.findOneByEmail(payload.email);
+
+      if (isEmailExist) {
+        return response(
+          res,
+          HttpStatus.CONFLICT,
+          'Failed: Email is already register!',
+          null,
+        );
+      }
+
+      const newUser = await this.userService.registerWithGoogle({
         email: payload.email,
         name: payload.name,
         google_open_id: payload.sub,
       });
 
-      return response(res, status, message, newUser);
+      return response(
+        res,
+        HttpStatus.CREATED,
+        'Successfully: Create a new account!',
+        newUser,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -108,7 +153,6 @@ export class UsersController {
 
   @Post('google/login')
   async loginGoogle(
-    @Req() req: Request,
     @Body() loginGoogleUserDto: LoginGoogleUserDto,
     @Res() res: Response,
   ) {
@@ -130,7 +174,6 @@ export class UsersController {
       const r = await client.getToken(loginGoogleUserDto.serverAuthCode);
 
       if (!r.tokens.access_token) {
-        console.error(r.res.statusText);
         return response(res, r.res.status, r.res.statusText, null);
       }
 
@@ -140,26 +183,47 @@ export class UsersController {
       });
       const payload = ticket.getPayload();
 
-      // register account with google
-      const [status, message, newUser] = await this.userService.registerGoogle({
-        email: payload.email,
-        name: payload.name,
-        google_open_id: payload.sub,
-      });
+      const isEmailExist = await this.userService.findOneByEmail(payload.email);
 
-      if (status === HttpStatus.CONFLICT) {
-        const [status, message, user] = await this.authService.loginGoogle({
+      if (!isEmailExist) {
+        await this.userService.registerWithGoogle({
+          email: payload.email,
+          name: payload.name,
+          google_open_id: payload.sub,
+        });
+
+        const authorization = await this.authService.loginGoogle({
           email: payload.email,
           google_open_id: payload.sub,
         });
 
-        return response(res, status, message, user);
+        if (!authorization) {
+          return response(
+            res,
+            HttpStatus.UNAUTHORIZED,
+            'Failed: Email and password incorrect!',
+            authorization,
+          );
+        }
+
+        return response(
+          res,
+          HttpStatus.OK,
+          'Successfully: Login!',
+          authorization,
+        );
       } else {
-        const [status, message, user] = await this.authService.loginGoogle({
+        const authorization = await this.authService.loginGoogle({
           email: payload.email,
           google_open_id: payload.sub,
         });
-        return response(res, status, message, user);
+
+        return response(
+          res,
+          HttpStatus.OK,
+          'Successfully: Login!',
+          authorization,
+        );
       }
     } catch (error) {
       console.error(error);
@@ -168,17 +232,27 @@ export class UsersController {
   }
 
   @Post('token')
-  async token(
-    @Res() res: Response,
-    @Body() tokenUserDto: TokenUserDto,
-    @User() user: Payload,
-  ) {
+  async token(@Res() res: Response, @Body() tokenUserDto: TokenUserDto) {
     try {
-      const [status, message, token] = await this.authService.token({
+      const authorization = await this.authService.token({
         token: tokenUserDto.token,
       });
 
-      return response(res, status, message, token);
+      if (!authorization) {
+        return response(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          'Failed: Email and password incorrect!',
+          authorization,
+        );
+      }
+
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: Create new token!',
+        authorization,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -194,22 +268,45 @@ export class UsersController {
     @User() user: Payload,
   ) {
     try {
-      if (!updateUserDto.confirmPassword) {
+      const { confirmPassword, newPassword, ...rest } = updateUserDto;
+
+      const isUserExist = await this.userService.findOneById(user.id);
+
+      if (!isUserExist) {
         return response(
           res,
-          HttpStatus.BAD_REQUEST,
-          'Password is required!',
-          null,
+          HttpStatus.NOT_FOUND,
+          'Failed: User not found!',
+          isUserExist,
         );
       }
 
-      const [
-        status,
-        message,
-        updatedUser,
-      ] = await this.userService.updateAccount(user.id, updateUserDto);
+      const isPasswordMatch = await comparePassword(
+        confirmPassword,
+        isUserExist.password,
+      );
 
-      return response(res, status, message, updatedUser);
+      if (!isPasswordMatch) {
+        return response(
+          res,
+          HttpStatus.FORBIDDEN,
+          'Failed: Password is incorrect!',
+          isPasswordMatch,
+        );
+      }
+
+      const updatedUser = await this.userService.update({
+        ...isUserExist,
+        ...rest,
+        password: newPassword,
+      });
+
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: Update user account!',
+        updatedUser,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -221,7 +318,12 @@ export class UsersController {
   @ApiBearerAuth()
   async account(@User() user: Payload, @Res() res: Response) {
     try {
-      return response(res, HttpStatus.OK, 'Successfully data account!', user);
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: Get user account!',
+        user,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -246,7 +348,7 @@ export class UsersController {
 
       await this.userService.updateAvatar(user.id, filename);
 
-      return response(res, HttpStatus.OK, 'Successfully update avatar!', null);
+      return response(res, HttpStatus.OK, 'Successfully: update avatar!', null);
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -287,22 +389,27 @@ export class UsersController {
         return response(
           res,
           HttpStatus.BAD_REQUEST,
-          "File key: 'avatar' is required!",
+          "Failed: Field 'file' is required!",
           null,
         );
       }
 
-      const [status, message, base64] = await getFileToBase64({
+      const base64 = await getFileToBase64({
         prefix: ['uploads', 'user', 'avatar'],
         name: path.basename(file.filename, path.extname(file.filename)),
       });
 
       await this.userService.updateAvatar(user.id, file.filename);
 
-      return response(res, status, message, {
-        path: path.normalize(file.path.replace('public', '')),
-        base64: base64,
-      });
+      return response(
+        res,
+        HttpStatus.ACCEPTED,
+        'Successfully: update avatar!',
+        {
+          path: path.normalize(file.path.replace('public', '')),
+          base64: base64,
+        },
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -313,23 +420,51 @@ export class UsersController {
   async getAvatar(@Res() res: Response, @Query() query: any) {
     try {
       const { userId, type } = query;
-      const [status, error, user] = await this.userService.findOneById(userId);
+      const user = await this.userService.findOneById(userId);
+
+      if (!user) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: User not found!',
+          user,
+        );
+      }
 
       if (type && type.toLowerCase() === 'base64') {
-        const [status, message, base64] = await getFileToBase64({
+        const base64 = await getFileToBase64({
           prefix: ['uploads', 'user', 'avatar'],
           name: path.basename(user.avatar, path.extname(user.avatar)),
         });
 
-        return response(res, status, message, base64);
+        if (base64) {
+          return response(
+            res,
+            HttpStatus.NOT_FOUND,
+            'Failed: File not found!',
+            null,
+          );
+        }
+
+        return response(
+          res,
+          HttpStatus.OK,
+          'Successfully: Get a file!',
+          base64,
+        );
       } else {
-        const [status, message, file, contentType] = await getFile({
+        const [file, contentType] = await getFile({
           prefix: ['uploads', 'user', 'avatar'],
           name: path.basename(user.avatar, path.extname(user.avatar)),
         });
 
         if (!file) {
-          return response(res, status, message, file);
+          return response(
+            res,
+            HttpStatus.NOT_FOUND,
+            'Failed: File not found!',
+            null,
+          );
         }
 
         res.set({
@@ -339,7 +474,6 @@ export class UsersController {
       }
     } catch (error) {
       console.error(error);
-
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
@@ -349,11 +483,14 @@ export class UsersController {
   @ApiBearerAuth()
   async friend(@Res() res: Response, @User() user: Payload) {
     try {
-      const [status, message, friends] = await this.userService.getFriends(
-        user.id,
-      );
+      const friends = await this.userService.getFriends(user.id);
 
-      return response(res, status, message, friends);
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: get friends!',
+        friends,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -365,13 +502,14 @@ export class UsersController {
   @ApiBearerAuth()
   async conversations(@Res() res: Response, @User() user: Payload) {
     try {
-      const [
-        status,
-        message,
-        conversations,
-      ] = await this.userService.getConversations(user.id);
+      const conversations = await this.userService.getConversations(user.id);
 
-      return response(res, status, message, conversations);
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: Get conversations!',
+        conversations,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -387,15 +525,14 @@ export class UsersController {
     @Query() searchUserDto: SearchUserDto,
   ) {
     try {
-      const [status, message, results] = await this.userService.findByQuery({
+      const results = await this.userService.findByQuery({
         user,
         ...searchUserDto,
       });
 
-      return response(res, status, message, results);
+      return response(res, HttpStatus.OK, 'Successfully: Get users!', results);
     } catch (error) {
       console.error(error);
-
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
@@ -405,13 +542,9 @@ export class UsersController {
   @ApiBearerAuth()
   async getPostByCurrentUser(@User() user: Payload, @Res() res: Response) {
     try {
-      const [
-        status,
-        message,
-        results,
-      ] = await this.userService.findPostsByUserId(user.id);
+      const posts = await this.userService.findPostsByUserId(user.id);
 
-      return response(res, status, message, results);
+      return response(res, HttpStatus.OK, 'Successfully: Get posts', posts);
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -421,12 +554,20 @@ export class UsersController {
   @Get(':id')
   async userById(@Res() res: Response, @Param('id') id: string) {
     try {
-      const [status, message, user] = await this.userService.findOneById(id);
+      const user = await this.userService.findOneById(id);
 
-      return response(res, status, message, user);
+      if (!user) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: User not found!',
+          user,
+        );
+      }
+
+      return response(res, HttpStatus.OK, 'Successfully: Get user!', user);
     } catch (error) {
       console.error(error);
-
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }
@@ -434,14 +575,11 @@ export class UsersController {
   @Get(':id/post')
   async getPostsByUserId(@Res() res: Response, @Param('id') id: string) {
     try {
-      const [status, message, user] = await this.userService.findPostsByUserId(
-        id,
-      );
+      const posts = await this.userService.findPostsByUserId(id);
 
-      return response(res, status, message, user);
+      return response(res, HttpStatus.OK, 'Successfully: Get posts', posts);
     } catch (error) {
       console.error(error);
-
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
     }
   }

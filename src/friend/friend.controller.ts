@@ -13,37 +13,20 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { Payload } from '../interfaces/payload.interface';
+import { UserService } from '../user/user.service';
 import { response } from '../utils/response';
 import { AcceptFriendDto } from './dto/accept-friend.dto';
-import { CreateFriendDto } from './dto/create-friend.dto';
 import { RequestFriendDto } from './dto/request-friend.dto';
+import { FriendStatus } from './entities/friend.entity';
 import { FriendService } from './friend.service';
 
 @ApiTags('Friend')
 @Controller('friend')
 export class FriendController {
-  constructor(private readonly friendService: FriendService) {}
-
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async create(
-    @Res() res: Response,
-    @Body() createFriendDto: CreateFriendDto,
-    @User() user: Payload,
-  ) {
-    try {
-      const [status, message, newFriend] = await this.friendService.create({
-        user: user,
-        ...createFriendDto,
-      });
-
-      return response(res, status, message, newFriend);
-    } catch (error) {
-      console.error(error);
-      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
-    }
-  }
+  constructor(
+    private readonly friendService: FriendService,
+    private readonly userService: UserService,
+  ) {}
 
   @Post('request')
   @UseGuards(JwtAuthGuard)
@@ -54,16 +37,44 @@ export class FriendController {
     @User() user: Payload,
   ) {
     try {
-      const [
-        status,
-        message,
-        newFriend,
-      ] = await this.friendService.requestFriend({
-        user: user,
+      const friend = await this.userService.findOneById(
+        requestFriendDto.friend.id,
+      );
+
+      if (!friend) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: User not found!',
+          null,
+        );
+      }
+
+      const isExist = await this.friendService.findByUserIdAndFriendId(
+        user.id,
+        friend.id,
+      );
+
+      if (isExist) {
+        return response(
+          res,
+          HttpStatus.CONFLICT,
+          'Failed: Already sent a request friend!',
+          null,
+        );
+      }
+
+      const newFriend = await this.friendService.requestFriend({
+        user,
         ...requestFriendDto,
       });
 
-      return response(res, status, message, newFriend);
+      return response(
+        res,
+        HttpStatus.OK,
+        'Successfully: Sent request friend!',
+        newFriend,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -76,19 +87,60 @@ export class FriendController {
   async acceptFriend(
     @Res() res: Response,
     @Body() acceptFriendDto: AcceptFriendDto,
-    @User() user: Payload,
+    @User() currentUser: Payload,
   ) {
     try {
-      const [
-        status,
-        message,
-        newFriend,
-      ] = await this.friendService.acceptFriend({
+      const user = await this.userService.findOneById(currentUser.id);
+      const friend = await this.userService.findOneById(
+        acceptFriendDto.friend.id,
+      );
+
+      if (!friend) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: User not found!',
+          null,
+        );
+      }
+
+      const isAlreadyAcceptFriend = await this.friendService.findFriendUserByStatus(
+        {
+          user,
+          friend,
+          status: FriendStatus.ACCEPT,
+        },
+      );
+
+      if (isAlreadyAcceptFriend) {
+        return response(
+          res,
+          HttpStatus.CONFLICT,
+          'Failed: Already added to friend!',
+          null,
+        );
+      }
+
+      const acceptedFriend = await this.friendService.acceptFriend({
         user: user,
         ...acceptFriendDto,
       });
 
-      return response(res, status, message, newFriend);
+      if (!acceptedFriend.affected) {
+        return response(
+          res,
+          HttpStatus.BAD_REQUEST,
+          'Failed: Something wrong!',
+          null,
+        );
+      }
+
+      return response(
+        res,
+        HttpStatus.NO_CONTENT,
+        'Successfully: Accept request to friend!',
+        acceptedFriend,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);

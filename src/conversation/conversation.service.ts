@@ -1,9 +1,9 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as _ from 'lodash';
 import { Repository } from 'typeorm/repository/Repository';
 
 import { User } from '../user/entities/user.entity';
-import { ResponseResult } from '../utils/response';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { Conversation } from './entities/conversation.entity';
 
@@ -16,83 +16,54 @@ export class ConversationService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(
-    createConversationDto: CreateConversationDto,
-  ): Promise<ResponseResult> {
+  async create(createConversationDto: CreateConversationDto) {
     try {
-      let isUsersHaveNotFound = false;
-      const users = await Promise.all(
-        createConversationDto.users.map(async (user) => {
-          const isExist = await this.userRepository.findOne(user.id);
+      const userIds = _.map(createConversationDto.users, 'id');
+      const users = await this.userRepository.findByIds(userIds);
 
-          if (isExist) {
-            return isExist;
-          } else {
-            isUsersHaveNotFound = true;
-          }
-        }),
-      );
-
-      if (isUsersHaveNotFound) {
-        return [
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          'Please, check user again!',
-          null,
-        ];
-      } else {
-        return [
-          HttpStatus.CREATED,
-          'Successfully create conversation!',
-          await this.conversationRepository.save({
-            ...createConversationDto,
-            users: users,
-          }),
-        ];
+      if (userIds.length !== users.length) {
+        return null;
       }
+
+      const newConversation = await this.conversationRepository.save({
+        ...createConversationDto,
+        users: users,
+      });
+
+      return newConversation;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async findById(id: string): Promise<ResponseResult> {
+  async findById(id: string) {
     try {
-      const isExist = await this.conversationRepository.findOne(id);
+      const conversation = await this.conversationRepository.findOne(id);
 
-      if (!isExist) {
-        return [
-          HttpStatus.NOT_FOUND,
-          `Please, couldn't find conversation!`,
-          null,
-        ];
-      }
-
-      return [
-        HttpStatus.OK,
-        'Successfully get conversation!',
-        await this.conversationRepository.findOne({
-          relations: ['users'],
-          where: { id },
-        }),
-      ];
+      return conversation;
     } catch (error) {
       console.error(error);
       throw new Error(error);
     }
   }
 
-  async getChatsById(id: string): Promise<ResponseResult> {
+  async findConversationUserById(id: string) {
     try {
-      const isExist = await this.conversationRepository.findOne(id);
+      const conversation = await this.conversationRepository.findOne({
+        relations: ['users'],
+        where: { id },
+      });
 
-      if (!isExist) {
-        return [
-          HttpStatus.NOT_FOUND,
-          `Please, couldn't find chat of conversation!`,
-          null,
-        ];
-      }
+      return conversation;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  }
 
+  async getChatsById(id: string) {
+    try {
       const chats = await this.conversationRepository
         .createQueryBuilder('conversation')
         .leftJoinAndSelect('conversation.chats', 'chat')
@@ -101,7 +72,7 @@ export class ConversationService {
         .orderBy('chat.created_at', 'DESC')
         .getOne();
 
-      return [HttpStatus.OK, 'Successfully get chat of conversation!', chats];
+      return chats;
     } catch (error) {
       console.error(error);
       throw new Error(error);

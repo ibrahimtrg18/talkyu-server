@@ -71,19 +71,24 @@ export class PostController {
         return response(
           res,
           HttpStatus.BAD_REQUEST,
-          "File key: 'file' is required!",
+          "Failed: Field 'file' is required!",
           null,
         );
       }
 
-      const [status, message, post] = await this.postService.create({
+      const post = await this.postService.create({
         user,
         ...createPostDto,
         file: file.filename,
         path: path.normalize(file.path.replace('public', '')),
       });
 
-      return response(res, status, message, post);
+      return response(
+        res,
+        HttpStatus.CREATED,
+        'Successfully: Create a new post!',
+        post,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -93,8 +98,18 @@ export class PostController {
   @Get(':id')
   async findOne(@Param('id') id: string, @Res() res: Response) {
     try {
-      const [status, message, post] = await this.postService.findPostById(id);
-      return response(res, status, message, post);
+      const post = await this.postService.findById(id);
+
+      if (!post) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: Post not found!',
+          null,
+        );
+      }
+
+      return response(res, HttpStatus.OK, 'Successfully: Get Post!', post);
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -110,12 +125,34 @@ export class PostController {
     @User() user: Payload,
   ) {
     try {
-      const [status, message, post] = await this.postService.removePostById(
-        id,
-        user.id,
-      );
+      const post = await this.postService.findById(id);
 
-      return response(res, status, message, post);
+      if (!post) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: Post not found!',
+          post,
+        );
+      }
+
+      if (post.user.id !== user.id) {
+        return response(
+          res,
+          HttpStatus.FORBIDDEN,
+          'Failed: Dont have permission for deleting this post!',
+          null,
+        );
+      }
+
+      const deletedPost = await this.postService.remove(id);
+
+      return response(
+        res,
+        HttpStatus.ACCEPTED,
+        'Successfully: Delete a post!',
+        deletedPost,
+      );
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
@@ -131,11 +168,31 @@ export class PostController {
     @User() user: Payload,
   ) {
     try {
-      const [status, message, post] = await this.postService.likePostById(
-        id,
-        user.id,
+      const post = await this.postService.findById(id);
+
+      if (!post) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: Post not found!',
+          post,
+        );
+      }
+
+      const isLiked = await this.postService.isLikedById(id);
+
+      if (isLiked.length) {
+        return response(res, HttpStatus.CONFLICT, 'Failed: Like a post!', null);
+      }
+
+      const likedPost = await this.postService.likePostById(id, user.id);
+
+      return response(
+        res,
+        HttpStatus.ACCEPTED,
+        'Successfully: Like a post!',
+        likedPost,
       );
-      return response(res, status, message, post);
     } catch (error) {
       console.error(error);
       return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
