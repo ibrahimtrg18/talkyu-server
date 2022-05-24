@@ -35,6 +35,6 @@ export class Comment {
   @OneToOne(() => User, { cascade: true })
   user: User;
 
-  @ManyToOne(() => Post, { cascade: true })
+  @ManyToOne(() => Post)
   post: Post;
 }

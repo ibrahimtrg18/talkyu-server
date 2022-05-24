@@ -58,19 +58,21 @@ export class User {
   })
   updated_at: Date;
 
-  @OneToMany(() => Post, (post) => post.user)
+  @OneToMany(() => Post, (post) => post.user, { cascade: true })
   posts: Post[];
 
-  @ManyToMany(() => Post, (post) => post.like_by_users)
+  @ManyToMany(() => Post, (post) => post.like_by_users, { cascade: true })
   @JoinTable({ name: 'user_like' })
   liked_post: Post[];
 
-  @OneToMany(() => Friend, (friend) => friend.user)
+  @OneToMany(() => Friend, (friend) => friend.user, { cascade: true })
   friends: Friend[];
 
   total_friends: number;
 
-  @ManyToMany(() => Conversation, (conversation) => conversation.users)
+  @ManyToMany(() => Conversation, (conversation) => conversation.users, {
+    cascade: true,
+  })
   @JoinTable({ name: 'user_conversation' })
   conversations: Conversation[];
 }

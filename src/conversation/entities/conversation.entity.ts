@@ -37,7 +37,7 @@ export class Conversation {
   })
   public updated_at: Date;
 
-  @OneToMany(() => Chat, (chat) => chat.conversation)
+  @OneToMany(() => Chat, (chat) => chat.conversation, { cascade: true })
   chats: Chat[];
 
   @ManyToMany(() => User, (user) => user.conversations)
