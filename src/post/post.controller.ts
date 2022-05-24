@@ -19,6 +19,7 @@ import { diskStorage } from 'multer';
 import * as path from 'path';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateCommentDto } from '../comment/dto/create-comment.dto';
 import { User } from '../decorators/user.decorator';
 import { Payload } from '../interfaces/payload.interface';
 import { response } from '../utils/response';
@@ -192,6 +193,45 @@ export class PostController {
         HttpStatus.ACCEPTED,
         'Successfully: Like a post!',
         likedPost,
+      );
+    } catch (error) {
+      console.error(error);
+      return response(res, HttpStatus.INTERNAL_SERVER_ERROR, error, null);
+    }
+  }
+
+  @Post(':id/comment')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async comment(
+    @Res() res: Response,
+    @Param('id') id: string,
+    @Body() createCommentDto: CreateCommentDto,
+    @User() user: Payload,
+  ) {
+    try {
+      const post = await this.postService.findById(id);
+
+      if (!post) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: Post not found!',
+          post,
+        );
+      }
+
+      const commentedPost = await this.postService.commentByPostId(
+        id,
+        createCommentDto,
+        user.id,
+      );
+
+      return response(
+        res,
+        HttpStatus.ACCEPTED,
+        'Successfully: Comment a post!',
+        commentedPost,
       );
     } catch (error) {
       console.error(error);

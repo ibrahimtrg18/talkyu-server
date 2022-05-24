@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { CreateCommentDto } from '../comment/dto/create-comment.dto';
+import { Comment } from '../comment/entities/comment.entity';
 import { User } from '../user/entities/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Post } from './entities/post.entity';
@@ -13,6 +15,8 @@ export class PostService {
     private readonly postRespository: Repository<Post>,
     @InjectRepository(User)
     private readonly userRespository: Repository<User>,
+    @InjectRepository(Comment)
+    private readonly commentRespository: Repository<Comment>,
   ) {}
 
   async create(createPostDto: CreatePostDto) {
@@ -36,6 +40,7 @@ export class PostService {
       const post = await this.postRespository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.like_by_users', 'postLikes')
+        .leftJoinAndSelect('post.comments', 'comments')
         .where('post.id = :postId', { postId: id })
         .getOne();
 
@@ -47,11 +52,7 @@ export class PostService {
   }
 
   async isLikedById(id: string) {
-    const post = await this.postRespository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.like_by_users', 'postLikes')
-      .where('post.id = :postId', { postId: id })
-      .getOne();
+    const post = await this.findById(id);
 
     const isLiked = await this.userRespository.findByIds(post.like_by_users);
 
@@ -60,11 +61,8 @@ export class PostService {
 
   async likePostById(id: string, userId: string) {
     try {
-      const post = await this.postRespository
-        .createQueryBuilder('post')
-        .leftJoinAndSelect('post.like_by_users', 'postLikes')
-        .where('post.id = :postId', { postId: id })
-        .getOne();
+      const post = await this.findById(id);
+
       const user = await this.userRespository.findOne(userId);
 
       const likedPost = await this.postRespository.save({
@@ -73,6 +71,34 @@ export class PostService {
       });
 
       return likedPost;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error);
+    }
+  }
+
+  async commentByPostId(
+    id: string,
+    createCommentDto: CreateCommentDto,
+    userId: string,
+  ) {
+    try {
+      const user = await this.userRespository.findOne(userId);
+
+      const post = await this.findById(id);
+
+      const comment = await this.commentRespository.save({
+        ...createCommentDto,
+        user,
+        post,
+      });
+
+      const commentedPost = await this.postRespository.save({
+        ...post,
+        comments: [...post.comments, comment],
+      });
+
+      return commentedPost;
     } catch (error) {
       console.error(error);
       throw new Error(error);
