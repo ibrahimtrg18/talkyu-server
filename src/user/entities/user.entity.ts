@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Comment } from '../../comment/entities/comment.entity';
 import { Conversation } from '../../conversation/entities/conversation.entity';
 import { Friend } from '../../friend/entities/friend.entity';
 import { Post } from '../../post/entities/post.entity';
@@ -75,4 +76,7 @@ export class User {
   })
   @JoinTable({ name: 'user_conversation' })
   conversations: Conversation[];
+
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
+  comments: Comment[];
 }

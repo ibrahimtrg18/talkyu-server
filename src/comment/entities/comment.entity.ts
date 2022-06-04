@@ -3,7 +3,6 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -32,7 +31,7 @@ export class Comment {
   })
   updated_at: Date;
 
-  @OneToOne(() => User, { cascade: true })
+  @ManyToOne(() => User)
   user: User;
 
   @ManyToOne(() => Post)

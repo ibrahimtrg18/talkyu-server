@@ -40,7 +40,9 @@ export class PostService {
       const post = await this.postRepository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.like_by_users', 'postLikes')
-        .leftJoinAndSelect('post.comments', 'comments')
+        .leftJoinAndSelect('post.comments', 'postComments')
+        .leftJoinAndSelect('post.user', 'postUser')
+        .leftJoinAndSelect('postComments.user', 'commentUser')
         .where('post.id = :postId', { postId: id })
         .getOne();
 
