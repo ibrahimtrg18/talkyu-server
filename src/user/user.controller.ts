@@ -575,6 +575,17 @@ export class UserController {
   @Get(':id/post')
   async getPostsByUserId(@Res() res: Response, @Param('id') id: string) {
     try {
+      const user = await this.userService.findOneById(id);
+
+      if (!user) {
+        return response(
+          res,
+          HttpStatus.NOT_FOUND,
+          'Failed: User not found!',
+          user,
+        );
+      }
+
       const posts = await this.userService.findPostsByUserId(id);
 
       return response(res, HttpStatus.OK, 'Successfully: Get posts', posts);
